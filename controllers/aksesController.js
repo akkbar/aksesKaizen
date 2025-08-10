@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const configPath = path.join(__dirname, '../config/fingerprint.json');
 const relayPath = path.join(__dirname, '../config/relay.json');
+const { bindByPath } = require('../devices/serialHelper');
 const fp = require('../devices/fp');
 let ioInstance = null;
 const momenttz = require('moment-timezone');
@@ -64,33 +65,27 @@ exports.deviceStatus = async (req, res) => {
         res.status(500).send('Internal server error')
     }
 };
-exports.setFingerprintPort = (req, res) => {
-  const port = req.body.port;
-  if (!port) return res.status(400).json({ message: 'Port not provided' });
-
-  const configPath = path.join(__dirname, '../config/fingerprint.json');
-
-  fs.writeFile(configPath, JSON.stringify({ port }), (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Failed to save port' });
-    }
-    res.json({ message: `Fingerprint port set to ${port}` });
-  });
+exports.setFingerprintPort = async (req, res) => {
+  try {
+    const { port } = req.body;
+    if (!port) return res.status(400).json({ message: 'Port not provided' });
+    const result = await bindByPath('fingerprint', port);
+    res.json({ message: `Fingerprint bound to VID:${result.vendorId} PID:${result.productId} @ ${result.path}` });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: e.message || 'Failed to bind fingerprint' });
+  }
 };
-exports.setRelayPort = (req, res) => {
-  const port = req.body.port;
-  if (!port) return res.status(400).json({ message: 'Port not provided' });
-
-  const configPath = path.join(__dirname, '../config/relay.json');
-
-  fs.writeFile(configPath, JSON.stringify({ port }), (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Failed to save port' });
-    }
-    res.json({ message: `Relay port set to ${port}` });
-  });
+exports.setRelayByPath = async (req, res) => {
+  try {
+    const { port } = req.body;
+    if (!port) return res.status(400).json({ message: 'Port not provided' });
+    const result = await bindByPath('relay', port);
+    res.json({ message: `Relay bound to VID:${result.vendorId} PID:${result.productId} @ ${result.path}` });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: e.message || 'Failed to bind relay' });
+  }
 };
 exports.detectDevice = async (req, res) => {
     try {

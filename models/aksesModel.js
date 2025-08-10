@@ -104,7 +104,7 @@ class aksesModel {
     //uAccess===============================================================================================================
     _uAccess(filters, columnSearches) {
         let query = aksesDb('user_akses')
-            .select('*')
+            .select('*').where({is_active: 1})
     
         if (filters.tipe > 0) {
             query.where(function() {

@@ -9,7 +9,7 @@ router.get('/', isAuthenticated, aksesController.getHomePage)
 
 router.get('/deviceStatus', isAuthenticated, aksesController.deviceStatus)
 router.post('/setFingerprint', isAuthenticated, aksesController.setFingerprintPort)
-router.post('/setRelay', isAuthenticated, aksesController.setRelayPort)
+router.post('/setRelay', isAuthenticated, aksesController.setRelayByPath)
 router.get('/detectDevice', isAuthenticated, aksesController.detectDevice)
 
 router.get('/uAccess', isAuthenticated, aksesController.getAkses)

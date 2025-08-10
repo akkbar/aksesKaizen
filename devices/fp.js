@@ -1,54 +1,145 @@
+// services/fingerprint.js
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
+const { exec } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 const path = require('path');
-const configPath = path.join(__dirname, '../config/fingerprint.json');
 const aksesModel = require('../models/aksesModel');
 const buzzer = require('./buzzer');
+
+// =====================
+// Konfigurasi & State
+// =====================
 let io = null;
 let enrollTimeout = null;
-let lastNotFoundTime = 0;
-const NOT_FOUND_COOLDOWN = 3500; // 3.5 detik
 
+const NOT_FOUND_COOLDOWN = 3500; // ms
+const RECOGNITION_COOLDOWN = 3500; // ms
+
+let lastNotFoundTime = 0;
+let lastRecognizedId = null;
+let lastRecognizedTime = 0;
+
+const FP_CFG = path.join(__dirname, '../config/fingerprint.json');
 
 function setSocket(ioInstance) {
   io = ioInstance;
 }
 
-let lastRecognizedId = null;
-let lastRecognizedTime = 0;
-const RECOGNITION_COOLDOWN = 3500; // dalam ms
+// =====================
+// Helper Config & Ports
+// =====================
+function listSerialPorts() {
+  return new Promise((resolve, reject) => {
+    exec('npx @serialport/list -f json', (error, stdout, stderr) => {
+      if (error) return reject(new Error(stderr || error.message));
+      try {
+        const raw = JSON.parse(stdout);
+        // Ambil port USB yang punya VID/PID saja (abaikan COM1 dsb)
+        const ports = raw.map(p => ({
+          path: p.path,
+          manufacturer: p.manufacturer || '',
+          vendorId: (p.vendorId || '').toLowerCase(),
+          productId: (p.productId || '').toLowerCase(),
+        })).filter(p => p.vendorId && p.productId);
+        resolve(ports);
+      } catch (e) {
+        reject(new Error('Invalid serial list output'));
+      }
+    });
+  });
+}
 
-let portPath = 'COM8'; // default fallback
-
-if (fs.existsSync(configPath)) {
+function readFpConfig() {
+  if (!fs.existsSync(FP_CFG)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(configPath));
-
-    if (data.port && data.port.trim() !== '') {
-      portPath = data.port.trim();
-    } else {
-      console.warn('⚠️ Config file ditemukan, tapi port kosong. Gunakan default COM8');
-    }
-
-  } catch (e) {
-    console.error('⚠️ Gagal baca fingerprint config:', e.message);
+    return JSON.parse(fs.readFileSync(FP_CFG, 'utf8'));
+  } catch {
+    return null;
   }
 }
 
+function writeFpConfig(cfg) {
+  fs.mkdirSync(path.dirname(FP_CFG), { recursive: true });
+  fs.writeFileSync(FP_CFG, JSON.stringify(cfg, null, 2));
+}
 
+/** Resolve COM path dari config fingerprint (match by VID/PID). */
+async function resolvePortFromConfig() {
+  const cfg = readFpConfig();
+  if (!cfg || !cfg.match || !cfg.match.vendorId || !cfg.match.productId) return null;
+
+  const wantedVid = String(cfg.match.vendorId).toLowerCase();
+  const wantedPid = String(cfg.match.productId).toLowerCase();
+
+  const ports = await listSerialPorts();
+  const match = ports.find(p => p.vendorId === wantedVid && p.productId === wantedPid);
+
+  return match ? match.path : null;
+}
+
+// =====================
+// Fingerprint Driver
+// =====================
 class FingerprintDriver extends EventEmitter {
   constructor(baudRate = 9600) {
     super();
-    this.port = new SerialPort({ path: portPath, baudRate: baudRate });
-    this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
-    this.setupListeners();
+    this.baudRate = baudRate;
+    this.port = null;
+    this.parser = null;
+    this.isConnected = false;
+    this.reconnectTimer = null;
+
+    this.currentEnroll = null; // kamu sudah pakai ini di flow enroll
+  }
+
+  async pickPortPath() {
+    // Hanya resolve berdasar VID/PID; kalau belum ada -> null (biar retry)
+    const resolved = await resolvePortFromConfig();
+    return resolved || null;
+  }
+
+  async connect() {
+    try {
+      if (this.isConnected) return;
+
+      const targetPath = await this.pickPortPath();
+      if (!targetPath) {
+        console.warn('⚠️ Fingerprint: VID/PID belum ketemu. Re-try 5s...');
+        return this.scheduleReconnect();
+      }
+
+      // Simpan lastKnownPath (informasi untuk UI/log)
+      const cfg = readFpConfig() || {};
+      cfg.lastKnownPath = targetPath;
+      writeFpConfig(cfg);
+
+      this.port = new SerialPort({ path: targetPath, baudRate: this.baudRate });
+      this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+
+      this.port.on('open', () => {
+        this.isConnected = true;
+        console.log(`✅ Fingerprint connected @ ${targetPath}`);
+        this.setupListeners();
+        if (io) io.emit('device_status', { event: 'fp_connected', path: targetPath });
+      });
+
+      this.port.on('error', (err) => {
+        console.error('❌ FP serial error:', err.message);
+        this.cleanup();
+        this.scheduleReconnect();
+      });
+    } catch (e) {
+      console.error('❌ FP connect() failed:', e.message);
+      this.cleanup();
+      this.scheduleReconnect();
+    }
   }
 
   setupListeners() {
     this.parser.on('data', (line) => {
-      line = line.trim();
+      line = String(line || '').trim();
       if (!line) return;
 
       if (line === 'i') {
@@ -74,48 +165,77 @@ class FingerprintDriver extends EventEmitter {
       }
     });
 
-    this.port.on('error', (err) => {
-      console.error('❌ Serial port error:', err.message);
+    this.port.on('close', () => {
+      console.log('🔌 Fingerprint port closed');
+      this.cleanup();
+      this.scheduleReconnect();
     });
   }
 
-    startEnroll() {
-        this.port.write('r\n');
-
-        // Hapus timeout sebelumnya jika ada
-        if (enrollTimeout) clearTimeout(enrollTimeout);
-
-        // Set timeout 1 menit
-        enrollTimeout = setTimeout(() => {
-            console.warn('⏱️ Enroll timeout. Membatalkan proses...');
-            this.cancel();
-            if (io) io.emit('fp_failed', 'Waktu habis. Proses enroll dibatalkan.');
-            this.currentEnroll = null;
-        }, 60000); // 60 detik
+  cleanup() {
+    this.isConnected = false;
+    if (this.port) {
+      try { this.port.removeAllListeners(); } catch {}
     }
+    if (this.parser) {
+      try { this.parser.removeAllListeners(); } catch {}
+    }
+    this.port = null;
+    this.parser = null;
+  }
 
+  scheduleReconnect() {
+    if (this.reconnectTimer) return; // cegah double
+    this.reconnectTimer = setTimeout(async () => {
+      this.reconnectTimer = null;
+      console.log('🔄 FP: trying to re-resolve & reconnect...');
+      await this.connect();
+    }, 5000);
+  }
+
+  // =====================
+  // Command ke device
+  // =====================
+  writeLine(s) {
+    if (!this.isConnected || !this.port) {
+      console.warn('⚠️ FP write skipped (not connected).');
+      return;
+    }
+    this.port.write(s, (err) => {
+      if (err) console.error('❌ FP write error:', err.message);
+    });
+  }
+
+  startEnroll() {
+    this.writeLine('r\n');
+
+    if (enrollTimeout) clearTimeout(enrollTimeout);
+    enrollTimeout = setTimeout(() => {
+      console.warn('⏱️ Enroll timeout. Membatalkan proses...');
+      this.cancel();
+      if (io) io.emit('fp_failed', 'Waktu habis. Proses enroll dibatalkan.');
+      this.currentEnroll = null;
+    }, 60000);
+  }
 
   sendEnrollID(id) {
-    this.port.write(String(id) + '\n');
+    this.writeLine(String(id) + '\n');
   }
 
   cancel() {
-    this.port.write('c\n');
+    this.writeLine('c\n');
   }
 }
 
-// ⏱️ Inisialisasi langsung saat file di-load
+// =====================
+// Inisialisasi instance
+// =====================
 const fp = new FingerprintDriver();
 
-// 🔄 Tambahkan listener global di sini (jika ingin)
-// fp.on('idle', () => console.log('[FP] Waiting for fingerprint...'));
+// Event handlers (tetap sama dengan logic kamu)
 fp.on('recognized', async (id) => {
   const now = Date.now();
-
-  // ✅ Jika ID sama dan belum lewat 3 detik, abaikan
-  if (id === lastRecognizedId && now - lastRecognizedTime < RECOGNITION_COOLDOWN) {
-    return;
-  }
+  if (id === lastRecognizedId && now - lastRecognizedTime < RECOGNITION_COOLDOWN) return;
 
   lastRecognizedId = id;
   lastRecognizedTime = now;
@@ -125,32 +245,31 @@ fp.on('recognized', async (id) => {
   const user = await aksesModel.findUser(2, id);
   let status = 1;
   if (user) {
-    status = 1
+    status = 1;
     console.log('[FP] User ditemukan:', user.nama);
-    buzzer.sendCommand('1'); // Nyalakan buzzer untuk sukses
+    buzzer.sendCommand('1'); // sukses
   } else {
-    status = 2
+    status = 2;
     console.log('[FP] User fingerprint ID', id, 'tidak ditemukan di database.');
-    buzzer.sendCommand('2'); // Nyalakan buzzer untuk gagal
+    buzzer.sendCommand('2'); // gagal
   }
-    await aksesModel.logAccess({ user_id: user?.id, is_success: status, in_time: new Date(), data_raw: id });
+  await aksesModel.logAccess({ user_id: user?.id, is_success: status, in_time: new Date(), data_raw: id });
 });
 
 fp.on('first_press', (id) => {
-  if (io) io.emit('fp_status', 'Jari pertama diterima untuk ID ' + id);
+  if (io) io.emit('fp_status', 'Tempelkan Jari untuk ID ' + id);
 });
 
-fp.on('first_lift', (id) => {
+fp.on('first_lift', () => {
   if (io) io.emit('fp_status', 'Angkat jari dan tempel lagi...');
 });
 
 fp.on('second_press', (id) => {
-  if (io) io.emit('fp_status', 'Jari kedua diterima untuk ID ' + id);
+  if (io) io.emit('fp_status', 'Angkat jari, Tunggu 4 detik, lalu Tempelkan Jari yang sama untuk ID ' + id);
 });
 
 fp.on('enroll_success', async (id) => {
   if (enrollTimeout) clearTimeout(enrollTimeout);
-
   if (!fp.currentEnroll || fp.currentEnroll.id_tipe !== id) return;
 
   await aksesModel.addUserData({
@@ -167,21 +286,17 @@ fp.on('enroll_success', async (id) => {
 
 fp.on('enroll_failed', (id) => {
   if (enrollTimeout) clearTimeout(enrollTimeout);
-
   if (io) io.emit('fp_failed', 'Enroll gagal untuk ID ' + id);
   fp.currentEnroll = null;
 });
+
 fp.on('not_found', async () => {
   const now = Date.now();
-
-  if (now - lastNotFoundTime < NOT_FOUND_COOLDOWN) {
-    return; // abaikan spam
-  }
-
+  if (now - lastNotFoundTime < NOT_FOUND_COOLDOWN) return;
   lastNotFoundTime = now;
 
   console.log('[FP] Fingerprint tidak dikenali.');
-  buzzer.sendCommand('2'); // buzzer gagal
+  buzzer.sendCommand('2');
 
   await aksesModel.logAccess({
     user_id: null,
@@ -193,9 +308,11 @@ fp.on('not_found', async () => {
   if (io) io.emit('fp_failed', 'Fingerprint tidak dikenali.');
 });
 
+// Auto connect saat load
+fp.connect().catch(err => {
+  console.error('❌ Gagal inisialisasi koneksi fingerprint:', err.message);
+});
 
-
-
-// 📦 Export langsung instansinya
+// Export
 module.exports = fp;
 module.exports.setSocket = setSocket;

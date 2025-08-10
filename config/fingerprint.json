@@ -1,1 +1,8 @@
-{"port":"COM8"}
+{
+  "port": "COM8",
+  "match": {
+    "vendorId": "1a86",
+    "productId": "7523"
+  },
+  "lastKnownPath": "COM8"
+}
