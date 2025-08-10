@@ -1,0 +1,136 @@
+<%- include(headerPath) %>
+
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6 mb-2">
+    <div class="col-lg-12">
+      <div class="card h-100">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-4 col-md-4">
+                <h5 class="mb-4">Device Overview</h5>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+                <label for="deviceSelector" class="form-label">Select Device</label>
+                <div class="input-group input-daterange bs-datepicker-daterange">
+                    <select id="deviceSelector" class="select2 form-select">
+                        <% data.deviceList.forEach(device => { %>
+                            <option value="<%- device.id %>"><%- device.showname %></option>
+                        <% }) %>
+                    </select>
+                    <button type="button" class="btn btn-primary waves-effect waves-light" id="applyButton">
+                        <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                    </button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-6 mb-6" id="deviceOverview">
+  </div>
+</div>
+<script>
+  let selectedDevice = document.getElementById("deviceSelector").value;
+  document.getElementById("applyButton").addEventListener("click", function () {
+    selectedDevice = document.getElementById("deviceSelector").value;
+    let overviewDiv = document.getElementById("deviceOverview");
+    
+    overviewDiv.innerHTML = "<p>Loading...</p>"; // Show loading text
+    
+    fetch(`/pme/deviceInspect/${selectedDevice}`)
+      .then(response => response.text())
+      .then(data => {
+        overviewDiv.innerHTML = data;
+      })
+      .catch(error => {
+        overviewDiv.innerHTML = "<p>Error loading data</p>";
+        console.error("Error:", error);
+      });
+  });
+
+  const socket = io();
+
+  socket.on('modbus_data', (data) => {
+    Object.keys(data).forEach(deviceId => {
+        const deviceData = data[deviceId];
+        Object.entries(deviceData).forEach(([key, value]) => {
+            if (deviceId === 'id_'+selectedDevice){
+              const conTime = document.getElementById('connectTime')
+              if (conTime) {
+                const now = new Date();
+                const formattedDate = now.getFullYear() + '-' +
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(now.getDate()).padStart(2, '0') + ' ' +
+                            String(now.getHours()).padStart(2, '0') + ':' +
+                            String(now.getMinutes()).padStart(2, '0') + ':' +
+                            String(now.getSeconds()).padStart(2, '0');
+                conTime.textContent = formattedDate;
+              }
+              if (key === 'vab') {
+                  const formattedVoltage = (deviceData.vab ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('vab')
+                  if (elem) elem.textContent = formattedVoltage;
+              } else if (key === 'vbc') {
+                  const formattedVoltage = (deviceData.vbc ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('vbc')
+                  if (elem) elem.textContent = formattedVoltage;
+              } else if (key === 'vca') {
+                  const formattedVoltage = (deviceData.vca ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('vca')
+                  if (elem) elem.textContent = formattedVoltage;
+              } else if (key === 'ia') {
+                  const mData = (deviceData.ia ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('ia')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'ib') {
+                  const mData = (deviceData.ib ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('ib')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'ic') {
+                  const mData = (deviceData.ic ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('ic')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'pfa') {
+                  const mData = (deviceData.pfa ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('pfa')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'pfb') {
+                  const mData = (deviceData.pfb ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('pfb')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'pfc') {
+                  const mData = (deviceData.pfc ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('pfc')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'thda') {
+                  const mData = (deviceData.thda ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('thda')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'thdb') {
+                  const mData = (deviceData.thdb ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('thdb')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'thdc') {
+                  const mData = (deviceData.thdc ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('thdc')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'ap') {
+                  const mData = (deviceData.ap ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('kwh')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'aq') {
+                  const mData = (deviceData.aq ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('kvarh')
+                  if (elem) elem.textContent = mData;
+              } else if (key === 'f') {
+                  const mData = (deviceData.f ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  const elem = document.getElementById('f')
+                  if (elem) elem.textContent = mData;
+              }
+            }
+        });
+    });
+  });
+</script>
+<%- include(footerPath) %>

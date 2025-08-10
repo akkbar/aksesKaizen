@@ -1,0 +1,114 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-3 col-md-3">
+              <h5 class="mb-4">Log Akses User</h5>
+                
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+              <label for="dateRangePicker" class="form-label">Filters</label>
+              <div class="input-group input-daterange" id="bs-datepicker-daterange">
+                <input type="text" id="dateRangePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                <span class="input-group-text">to</span>
+                <input type="text" id="dateRangePicker2" placeholder="MM/DD/YYYY" class="form-control" />
+                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="table.ajax.reload()">
+                  <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table" id="table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Masuk</th>
+                <th>Keluar</th>
+              </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+            </tbody>
+          </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+  
+  var bsDatepickerRange = $('#bs-datepicker-daterange')
+  if (bsDatepickerRange.length) {
+    bsDatepickerRange.datepicker({
+      todayHighlight: true,
+      orientation: 'auto left',
+      format: 'yyyy-mm-dd', // Set format to YYYY-MM-DD
+      autoclose: true
+    });
+  }
+	var table;
+  $(document).ready(function() {
+    table = $('#table').DataTable({ 
+        processing: true,
+        serverSide: true,
+        order: [],
+        stateSave: true,
+        ajax: {
+            url: "/akses/accessLogs",
+            type: "POST",
+            data: function ( data ) {
+                data.startDate = $('#dateRangePicker').val();
+                data.endDate = $('#dateRangePicker2').val();
+                // data.end_time = $('#end_time').val();
+                // data.eq_id = $('#eq_id').val();
+                // data.area = $('#area').val();
+                // data.status = $('#status').val();
+            }
+        },
+        // "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+        //     if ( aData[9] != "" ){
+        //         $('td', nRow).css('background-color', '#a4d3eb');
+        //     }
+        // },
+        columnDefs: [
+          // { visible: false, targets: [ 1,2,4,5,7,8, 10,11,13,14,16,17, 19,20, 22,23, 25,26,27,28,29,30,31,32,33 ] },
+          { orderable: false, targets: [1] }
+        ],
+        aoColumns: [
+            null,
+            null,
+            null,
+            null,
+            null
+            ],
+        dom:
+        "<'row d-flex justify-content-between flex-wrap'<'col-lg-6 col-md-6 col-sm-12 col-12'l><'col-lg-2 col-md-2 col-sm-12 col-12 float-right'B>>" +
+        "<'row'<'col-lg-12 col-md-12 col-12 table-responsive'tr>>" +
+        "<'row'<'col-lg-5 col-md-5 col-12'i><'col-lg-7 col-md-7 col-12'p>>",
+        buttons: [{
+                extend:    'excel',
+                text:      '<i class="ri-file-excel-2-line"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success'
+            },{
+                extend: 'colvis',
+                className: 'btn btn-default',
+                postfixButtons: ['colvisRestore']
+            }],
+            fade: false,
+        language: {
+            buttons: {
+                colvis: 'Columns'
+            },
+            searchPlaceholder: "Search records",
+            search: ""
+        },
+        lengthMenu: [[10, 100, 1000, 5000], [10, 100, 1000, 5000]]
+    });
+  });
+  
+</script>
+
+<%- include(footerPath) %>

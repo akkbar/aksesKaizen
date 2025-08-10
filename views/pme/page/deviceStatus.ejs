@@ -1,0 +1,219 @@
+<%- include(headerPath) %>
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6 mb-6">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between flex-wrap gap-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex justify-content-between">
+              <h5 class="mb-1">Devices Status</h5>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded">
+                <i class="ri-signal-tower-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="card-info">
+              <h5 class="mb-0"><span id="deviceOnline"></span>/<%= data.deviceCount %></h5>
+              <p class="mb-0">Online Devices</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body d-flex justify-content-between flex-wrap gap-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded">
+                <i class="ri-calendar-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="card-info">
+              <h5 class="mb-0" id="totalkWh">----</h5>
+              <p class="mb-0">MTD kWh</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-warning rounded">
+                <i class="ri-calendar-2-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="card-info">
+              <h5 class="mb-0" id="totalkVARh">----</h5>
+              <p class="mb-0">MTD kVARh</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-info rounded">
+                <i class="ri-percent-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="card-info">
+              <h5 class="mb-0" id="rasiokVARh">----</h5>
+              <p class="mb-0">kVARh Ratio</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% data.deviceList.forEach(device => { %>
+      <div class="col-lg-3 col-sm-6">
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+              <p class="d-block mb-0 text-body"><%= device.showname %></p>
+              <div class="d-flex align-items-center text-success" id="deviceOnlineid_<%= device.id %>">
+                Online
+              </div>
+            </div>
+            <h4 class="mb-0"><span id="kwhid_<%= device.id %>">----</span> kWh</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-4">
+                <div class="d-flex gap-2 align-items-center mb-2">
+                  <div class="avatar avatar-xs flex-shrink-0">
+                    <div class="avatar-initial rounded bg-label-warning">
+                      <i class="ri-eject-line ri-16px"></i>
+                    </div>
+                  </div>
+                  <p class="mb-0">Voltage</p>
+                </div>
+                <h4 class="mb-2"><span id="voltid_<%= device.id %>">----</span></h4>
+              </div>
+              <div class="col-4">
+                <div class="divider divider-vertical">
+                  <div class="divider-text">
+                    <span class="badge-divider-bg"><i class="ri-sparkling-2-fill"></i></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-4 text-end">
+                <div class="d-flex gap-2 justify-content-end align-items-center mb-2">
+                  <p class="mb-0">Ampere</p>
+                  <div class="avatar avatar-xs flex-shrink-0">
+                    <div class="avatar-initial rounded bg-label-primary">
+                      <i class="ri-fire-line ri-16px"></i>
+                    </div>
+                  </div>
+                </div>
+                <h4 class="mb-2"><span id="ampid_<%= device.id %>">----</span></h4>
+              </div>
+            </div>
+            <div class="d-flex align-items-center mt-4">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<script>
+  let initialData = {}; // Store initial stamp_ap values
+
+  // Initialize initial data from the controller
+  <% data.getMonthlyStart.forEach(device => { %>
+      initialData["apid_<%= device.devid %>"] = parseFloat("<%= device.stamp_ap %>");
+      initialData["aqid_<%= device.devid %>"] = parseFloat("<%= device.stamp_aq %>");
+  <% }); %>
+
+  let totalDifferenceP = {};
+  let totalDifferenceQ = {};
+
+
+  const deviceLastSeen = {};
+  const socket = io(); // Connect to the server
+  let lastTotal = Date.now();
+  socket.on('total_online', (data) => {
+    document.getElementById('deviceOnline').innerText = data.total_online;
+    lastTotal = Date.now();
+  });
+
+  socket.on('modbus_data', (data) => {
+
+    Object.keys(data).forEach(deviceId => {
+        const deviceData = data[deviceId];
+        Object.entries(deviceData).forEach(([key, value]) => {
+            if (key === 'vab') {
+              const voltage = deviceData.vab
+              const formattedVoltage = (voltage ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const voltElement = document.getElementById(`volt${deviceId}`);
+              if (voltElement) voltElement.textContent = formattedVoltage;
+            } else if (key === 'ia') {
+              const current = deviceData.ia
+              const formattedCurrent = (current ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const ampElement = document.getElementById(`amp${deviceId}`);
+              if (ampElement) ampElement.textContent = formattedCurrent;
+            } else if (key === 'ap') {
+              const power = deviceData.ap
+              const formattedPower = (power ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const kwhElement = document.getElementById(`kwh${deviceId}`);
+              if (kwhElement) kwhElement.textContent = formattedPower;
+              let currentAp = parseFloat(data[deviceId].ap);
+
+              let initialAp = initialData["ap" + deviceId];
+              let difference = currentAp - Number(initialAp);
+              totalDifferenceP[deviceId] = difference;
+            } else if (key === 'aq') {
+              
+              let currentAp = parseFloat(data[deviceId].aq);
+
+              let initialAp = initialData["aq" + deviceId];
+              let difference = currentAp - Number(initialAp);
+              totalDifferenceQ[deviceId] = difference;
+            }
+        });
+        
+        const onlineElement = document.getElementById(`deviceOnline${deviceId}`);
+
+        if (onlineElement) {
+          deviceLastSeen[deviceId] = Date.now(); // Update last seen timestamp
+          updateDeviceStatus(deviceId, true);
+        } else {
+            console.warn(`Device ${deviceId}: Status elements not found in DOM.`);
+        }
+    });
+  });
+  setInterval(() => {
+    
+    const now = Date.now();
+    Object.keys(deviceLastSeen).forEach(deviceId => {
+        // console.log(`${now} - ${deviceLastSeen[deviceId]}`);
+        if (now - deviceLastSeen[deviceId] > 10000) { // 1 minute timeout
+            updateDeviceStatus(deviceId, false);
+        }
+    });
+    if (now - lastTotal > 70000) { // 1 minute timeout
+      document.getElementById('deviceOnline').innerText = '0';
+    }
+    let totalkWh = Object.values(totalDifferenceP).reduce((sum, value) => sum + value, 0);
+    let totalkVARh = Object.values(totalDifferenceQ).reduce((sum, value) => sum + value, 0);
+    let rasiokVARh = (totalkWh !== 0) ? (totalkVARh / totalkWh * 100) : 0;
+    if (!isFinite(rasiokVARh) || isNaN(rasiokVARh)) {
+      rasiokVARh = 0;
+    }
+    document.getElementById('totalkWh').textContent = (totalkWh ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('totalkVARh').textContent = (totalkVARh ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('rasiokVARh').textContent = (rasiokVARh ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  }, 5000);
+  function updateDeviceStatus(deviceId, isOnline) {
+    const deviceStatus = document.getElementById(`deviceOnline${deviceId}`);
+
+    if (deviceStatus) {
+        if (isOnline) {
+            deviceStatus.className = "d-flex align-items-center text-success";
+            deviceStatus.textContent = "Online";
+            deviceLastSeen[deviceId] = Date.now(); // Update last seen timestamp
+        } else {
+            deviceStatus.className = "d-flex align-items-center text-danger";
+            deviceStatus.textContent = "Offline";
+        }
+    }
+}
+
+</script>
+<%- include(footerPath) %>

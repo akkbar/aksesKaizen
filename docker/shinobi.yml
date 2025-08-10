@@ -1,0 +1,31 @@
+version: '3.8'
+name: shinobi
+services:
+  shinobi:
+    image: shinobisystems/shinobi:dev
+    container_name: shinobi
+    restart: always
+    ports:
+      - "8089:8080"   # Web UI
+      - "8081:8081"   # Streaming WebSocket
+    environment:
+      - PLUGIN_KEYS=1
+      - SSL=false
+    volumes:
+      - ./config:/config       # config data (e.g., conf.json)
+      - ./videos:/home/Shinobi/videos  # Rekaman video disimpan di sini
+      - ./database:/var/lib/mysql      # Database persistent
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    container_name: shinobi-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ccio
+      MYSQL_USER: shinobi
+      MYSQL_PASSWORD: shinobi
+    volumes:
+      - ./mysql_data:/var/lib/mysql

@@ -1,0 +1,100 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-3 col-md-3">
+              <h5 class="mb-4">Add Fingerprint</h5>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+              
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <div class="row">
+            <div class="col-6 col-md-6 mt-4">
+                <form id="enrollForm">
+                    <div class="form-floating form-floating-outline mb-4 mt-4">
+                        <input
+                            type="text"
+                            id="nama"
+                            step="0.01"
+                            name="nama"
+                            class="form-control"
+                            value=""
+                            required
+                            placeholder="Nama Pengguna" />
+                        <label for="persen">Nama Pengguna</label>
+                    </div>
+                    <div class="form-floating form-floating-outline mb-4 mt-4">
+                        <select id="id_tipe" name="cmd" class="select2 form-select" required>
+                            <% data.availableIDs.forEach(id => { %>
+                            <option value="<%= id %>"><%= id %></option>
+                            <% }) %>
+                        </select>
+                        <label for="id_tipe">ID Fingerprint</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Mulai Enroll</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer table-responsive">
+          <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="status" id="status"></div>
+                <div class="status" id="rfidResult"></div>
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+<script>
+    const statusEl = document.getElementById('status');
+    let selectedID = null;
+    let userName = '';
+
+    document.getElementById('enrollForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    userName = document.getElementById('nama').value.trim();
+    selectedID = parseInt(document.getElementById('id_tipe').value);
+
+    if (!userName || isNaN(selectedID)) {
+        statusEl.innerHTML = '<div class="alert alert-danger">Nama dan ID harus diisi</div>';
+        return;
+    }
+
+    // Kirim ke backend untuk mulai enroll
+    const res = await fetch('/akses/enrollFingerprint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama: userName, id_tipe: selectedID })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+        statusEl.innerHTML = '<div class="alert alert-info">Silakan tempelkan jari untuk ID ' + selectedID + '</div>';
+    } else {
+        statusEl.innerHTML = '<div class="alert alert-danger">' + result.message + '</div>';
+    }
+    });
+
+    // Listen status dari server (pakai socket.io)
+    const socket = io();
+
+    socket.on('fp_status', (msg) => {
+    statusEl.innerHTML = '<div class="alert alert-warning">' + msg + '</div>';
+    });
+
+    socket.on('fp_success', (msg) => {
+    statusEl.innerHTML = '<div class="alert alert-success">' + msg + '</div>';
+    });
+
+    socket.on('fp_failed', (msg) => {
+    statusEl.innerHTML = '<div class="alert alert-danger">' + msg + '</div>';
+    });
+</script>
+
+<%- include(footerPath) %>

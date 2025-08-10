@@ -1,0 +1,221 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-3 col-md-3">
+              <h5 class="mb-4">Akses User</h5>
+                <a href="/akses/addRFID" class="btn btn-primary waves-effect waves-light">
+                    <span class="tf-icons ri-rss-line ri-16px me-2"></span>Add RFID
+                </a>
+                <a href="/akses/addFingerprint" class="btn btn-success waves-effect waves-light">
+                    <span class="tf-icons ri-fingerprint-line ri-16px me-2"></span>Add Fingerprint
+                </a>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+              <label for="dateRangePicker" class="form-label">Filters</label>
+              <div class="input-group input-daterange" id="bs-datepicker-daterange">
+                <select id="tipe" class="select2 form-select">
+                  <option value="0">Semua Jenis</option>
+                    <option value="1">RFID</option>
+                    <option value="2">Fingerprint</option>
+                </select>
+                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="table.ajax.reload()">
+                  <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table" id="table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Jenis</th>
+                <th>ID</th>
+                <th>Dibuat</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+            </tbody>
+          </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_data">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12 col-md-12">
+                  <div class="text-center mb-6">
+                      <h4 class="mb-2">Edit Akses</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="mb-3 col-6 col-md-6">
+                  <div class="form-floating form-floating-outline">
+                    <input
+                      type="text"
+                      id="namaPengguna"
+                      name="namaPengguna"
+                      class="form-control"
+                      value=""
+                      placeholder="Nama Pengguna" />
+                    <label for="namaPengguna">Nama Pengguna</label>
+                  </div>
+                </div>
+                <div class="mb-3 col-6 col-md-6 fv-plugins-icon-container">
+                  <div class="form-floating form-floating-outline">
+                      <select id="is_active" class="select2 form-select">
+                          <option value="1">Aktif</option>
+                          <option value="0">Hapus</option>
+                      </select>
+                      <label for="is_active">Status</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 text-center d-flex flex-wrap justify-content-center gap-4 row-gap-4">
+                <button type="submit" class="btn btn-primary" onclick="edit_data_exe()">Submit</button>
+                <button
+                  type="reset"
+                  class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal"
+                  aria-label="Close">
+                  Cancel
+                </button>
+              </div>
+            </div>
+            <span class="text-red" id="edit_data_warning"></span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var editId;
+  function show_modal(id) {
+      editId = id;
+      $('#edit_data').modal('show');
+      axios.post('/akses/getAccessDetail', { id: editId })
+      .then((response) => {
+          if (response.status === 200) {
+            console.log(response.data)
+              $('#namaPengguna').val(response.data.nama)
+              $('#is_active').val(response.data.is_active).trigger('change')
+              $('#edit_data_warning').html('');
+          }
+      })
+      .catch((error) => {
+          if (error.response && error.response.status === 400) {
+              $('#edit_data_warning').html(error.response.data.message);
+          } else if (error.response && error.response.status === 500) {
+              $('#edit_data_warning').html(error.response.data.message);
+          } else {
+              $('#edit_data_warning').html(error.message);
+          }
+      });
+  }
+  function edit_data_exe() {
+      document.getElementById('edit_data_warning').innerHTML = '';
+      axios.post('/akses/updateAccess', {
+          nama: $('#namaPengguna').val(),
+          is_active: $('#is_active').val(),
+          id: editId
+      })
+      .then(function (response) {
+          if (response.status === 201) {
+              document.getElementById('edit_data_warning').innerHTML = '';
+              $('#edit_data').modal('hide');
+              location.reload();
+          }
+      })
+      .catch(function (error) {
+          if (error.response) {
+              if (error.response.status === 400) {
+                  document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+              } else if (error.response.status === 500) {
+                  document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+              } else {
+                  document.getElementById('edit_data_warning').innerHTML = error.message;
+              }
+          } else {
+              document.getElementById('edit_data_warning').innerHTML = 'An unexpected error occurred.';
+          }
+      });
+  }
+
+
+  var bsDatepickerRange = $('#bs-datepicker-daterange')
+  if (bsDatepickerRange.length) {
+    bsDatepickerRange.datepicker({
+      todayHighlight: true,
+      orientation: 'auto left',
+      format: 'yyyy-mm-dd', // Set format to YYYY-MM-DD
+      autoclose: true
+    });
+  }
+	var table;
+  $(document).ready(function() {
+    table = $('#table').DataTable({ 
+        processing: true,
+        serverSide: true,
+        order: [],
+        stateSave: true,
+        ajax: {
+            url: "/akses/uAccess",
+            type: "POST",
+            data: function ( data ) {
+                data.tipe = $('#tipe').val();
+                // data.end_time = $('#end_time').val();
+                // data.eq_id = $('#eq_id').val();
+                // data.area = $('#area').val();
+                // data.status = $('#status').val();
+            }
+        },
+        // "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+        //     if ( aData[9] != "" ){
+        //         $('td', nRow).css('background-color', '#a4d3eb');
+        //     }
+        // },
+        columnDefs: [
+          // { visible: false, targets: [ 1,2,4,5,7,8, 10,11,13,14,16,17, 19,20, 22,23, 25,26,27,28,29,30,31,32,33 ] },
+          { orderable: false, targets: [1] }
+        ],
+        aoColumns: [
+            null,
+            null,
+            null,
+            null,
+            null
+            ],
+        dom:
+        "<'row d-flex justify-content-between flex-wrap'<'col-lg-6 col-md-6 col-sm-12 col-12'l><'col-lg-2 col-md-2 col-sm-12 col-12 float-right'B>>" +
+        "<'row'<'col-lg-12 col-md-12 col-12 table-responsive'tr>>" +
+        "<'row'<'col-lg-5 col-md-5 col-12'i><'col-lg-7 col-md-7 col-12'p>>",
+        buttons: [{
+                extend:    'excel',
+                text:      '<i class="ri-file-excel-2-line"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success'
+            },{
+                extend: 'colvis',
+                className: 'btn btn-default',
+                postfixButtons: ['colvisRestore']
+            }],
+            fade: false,
+        language: {
+            buttons: {
+                colvis: 'Columns'
+            },
+            searchPlaceholder: "Search records",
+            search: ""
+        },
+        lengthMenu: [[10, 100, 1000, 5000], [10, 100, 1000, 5000]]
+    });
+  });
+  
+</script>
+
+<%- include(footerPath) %>

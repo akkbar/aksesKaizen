@@ -1,0 +1,29 @@
+name: akses-kaizen
+services:
+  mysql:
+    image: mysql:8
+    container_name: openaiot-mysql-akses-kaizen
+    restart: always
+    ports:
+      - "3311:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${TZ}  # Set the timezone using the environment variable
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./mysql-init/my.cnf:/etc/my.cnf
+      - ./mysql-init/a-entrypoint.sh:/a-entrypoint.sh
+      - ./mysql-init/b-init.sql:/docker-entrypoint-initdb.d/b-init.sql
+    networks:
+      - openaiot-general-net
+    entrypoint: ["/bin/bash", "/a-entrypoint.sh"]
+    command: ["mysqld", "--init-file=/docker-entrypoint-initdb.d/b-init.sql"]
+
+      
+networks:
+  openaiot-general-net:
+    driver: bridge
+    name: openaiot-general-net

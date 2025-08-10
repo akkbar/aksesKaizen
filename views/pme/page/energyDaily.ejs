@@ -1,0 +1,448 @@
+<%- include(headerPath) %>
+
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6 mb-2">
+    <div class="col-lg-12">
+      <div class="card h-100">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-4 col-md-4">
+                <h5 class="mb-4">Daily Energy Report</h5>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+                <label for="deviceSelector" class="form-label">Select Device</label>
+                <div class="input-group input-daterange bs-datepicker-daterange">
+                    <select id="deviceSelector" class="select2 form-select">
+                        <% data.deviceList.forEach(device => { %>
+                            <option value="<%- device.id %>"><%- device.showname %></option>
+                        <% }) %>
+                    </select>
+                    <input type="text" id="datePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                    <button type="button" class="btn btn-primary waves-effect waves-light" id="applyButton">
+                        <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                    </button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-6 mb-6">
+    <div class="col-12 col-xxl-12">
+      <div class="card h-100">
+          <div class="row row-bordered g-0 h-100">
+              <div class="col-xxl-10 col-md-8 col-12 order-2 order-md-0">
+                  <div class="card-header">
+                      <h5 class="mb-0">Hourly Usage</h5>
+                  </div>
+                  <div class="card-body">
+                      <div id="mainChart" style="height: 300px;"></div>
+                  </div>
+              </div>
+              <div class="col-xxl-2 col-md-4 col-12">
+                  <div class="card-header">
+                      <div class="d-flex justify-content-between">
+                          <h5 class="mb-1">Summary</h5>
+                      </div>
+                  </div>
+                  <div class="card-body pt-6">
+                      <div class="row">
+                          <div class="col-6 border-end">
+                              <div class="d-flex flex-column align-items-center">
+                                  <p class="mt-3 mb-1">kWh</p>
+                                  <h6 class="mb-0"><span id="total_kWh">0</span></h6>
+                              </div>
+                          </div>
+                          <div class="col-6">
+                              <div class="d-flex flex-column align-items-center">
+                                  <p class="mt-3 mb-1">kVARh</p>
+                                  <h6 class="mb-0"><span id="total_kVARh">0</span></h6>
+                              </div>
+                          </div>
+                      </div>
+                      <hr class="my-5" />
+                      <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                          <div>
+                              <p class="mb-1">kVARh Ratio</p>
+                              <h6 class="mb-0"><span id="rasio_kVARh">0</span></h6>
+                          </div>
+                      </div>
+                      <hr class="my-5" />
+                      <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                          <div>
+                              <p class="mb-1">Current Cost (IDR)</p>
+                              <h6 class="mb-0"><span id="total_price">0</span></h6>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+      
+  <div class="col-12 col-xxl-7 col-md-6">
+      <div class="card h-100">
+          <div class="card-header">
+              <div class="d-flex justify-content-between">
+                  <h5 class="mb-1">Alarms</h5>
+                  <a href="/pme/alarms" class="btn btn-primary" type="button">All Alarms</a>
+              </div>
+          </div>
+          <div class="card-body" style="height:300px; overflow-y: auto;">
+              <div class="table-responsive">
+                  <table class="table border-top" id="alarmTable">
+                      <thead>
+                          <tr>
+                              <th class="bg-transparent border-bottom p-1">Time</th>
+                              <th class="bg-transparent border-bottom p-1">Alarm</th>
+                              <th class="bg-transparent border-bottom p-1">Std</th>
+                              <th class="text-end bg-transparent border-bottom p-1">Value</th>
+                          </tr>
+                      </thead>
+                      <tbody class="table-border-bottom-0">
+                          <tr>
+                              <td colspan="3">No Alarm</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+  </div>
+      
+  
+  <div class="col-md-6 col-xxl-5">
+    <div class="row g-4">
+      <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+              <div class="card-header pb-xl-2">
+                  <div class="d-flex align-items-center mb-1 flex-wrap">
+                      <h5 class="mb-0 me-1">V Unbalance</h5>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <ul class="timeline card-timeline mb-0">
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-primary"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">Vab <span id="avgVab"></span>V (<span id="unBalA"></span>%)</h6>
+                              </div>
+                              <p class="mb-1"><span id="minVab"></span> - <span id="maxVab"></span></p>
+                          </div>
+                      </li>
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-warning"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">Vbc <span id="avgVbc"></span>V (<span id="unBalB"></span>%)</h6>
+                              </div>
+                              <p class="mb-1"><span id="minVbc"></span> - <span id="maxVbc"></span></p>
+                          </div>
+                      </li>
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-danger"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">Vca <span id="avgVca"></span>V (<span id="unBalC"></span>%)</h6>
+                              </div>
+                              <p class="mb-1"><span id="minVca"></span> - <span id="maxVca"></span></p>
+                          </div>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+              <div class="card-header pb-xl-2">
+                  <div class="d-flex align-items-center mb-1 flex-wrap">
+                      <h5 class="mb-0 me-1">Harmonic (%)</h5>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <ul class="timeline card-timeline mb-0">
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-primary"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">THD A <span id="thda"></span></h6>
+                              </div>
+                              <p class="mb-1"><span id="minthda"></span> - <span id="maxthda"></span></p>
+                          </div>
+                      </li>
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-warning"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">THD B <span id="thdb"></span></h6>
+                              </div>
+                              <p class="mb-1"><span id="minthdb"></span> - <span id="maxthdb"></span></p>
+                          </div>
+                      </li>
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-danger"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">THD C <span id="thdc"></span></h6>
+                              </div>
+                              <p class="mb-1"><span id="minthdc"></span> - <span id="maxthdc"></span></p>
+                          </div>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+              <div class="card-header pb-xl-2">
+                  <div class="d-flex align-items-center mb-1 flex-wrap">
+                      <h5 class="mb-0 me-1">Frequency (Hz)</h5>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <ul class="timeline card-timeline mb-0">
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-primary"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">Average: <span id="f"></span></h6>
+                              </div>
+                              <p class="mb-1"><span id="minf"></span> - <span id="maxf"></span></p>
+                          </div>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+              <div class="card-header pb-xl-2">
+                  <div class="d-flex align-items-center mb-1 flex-wrap">
+                      <h5 class="mb-0 me-1">Power Factor</h5>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <ul class="timeline card-timeline mb-0">
+                      <li class="timeline-item timeline-item-transparent">
+                          <span class="timeline-point timeline-point-primary"></span>
+                          <div class="timeline-event">
+                              <div class="timeline-header mb-0">
+                                  <h6 class="mb-0">Average: <span id="pf"></span></h6>
+                              </div>
+                              <p class="mb-1"><span id="minpf"></span> - <span id="maxpf"></span></p>
+                          </div>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var bsDatepickerRange = $('#datePicker');
+  bsDatepickerRange.datepicker({
+    todayHighlight: true,
+    orientation: 'auto left',
+    format: 'yyyy-mm-dd', // Set format to YYYY-MM for month picker
+    autoclose: true,
+  });
+  
+  let selectedDevice = document.getElementById("deviceSelector").value;
+  let selectedDate = document.getElementById("datePicker").value;
+  document.getElementById("applyButton").addEventListener("click", function () {
+    selectedDevice = document.getElementById("deviceSelector").value;
+    selectedDate = document.getElementById("datePicker").value;
+    
+    loadChartData(selectedDevice, selectedDate);
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    loadChartData(selectedDevice, selectedDate);
+  });
+
+
+  function loadChartData(selectedDevice, selectedDate) {
+    let startDate, endDate;
+    if (!selectedDate) {
+      const now = new Date();
+      startDate = now.toISOString().split('T')[0];
+      endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    } else {
+      startDate = selectedDate;
+      const selectedD = new Date(selectedDate);
+      endDate = new Date(selectedD.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
+    loadChart(selectedDevice, startDate, endDate);
+    loadAlarm(selectedDevice, startDate, endDate);
+  }
+  async function loadChart(devid, startDate, endDate) {
+    try {
+        const response = await fetch('/pme/trendHourlyData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ devid, startDate, endDate })
+        });
+        const data = await response.json();
+
+        const dates = data.map(item => item.date);
+
+        const min_vab = data.map(item => Number(item.min_vab));
+        const min_vbc = data.map(item => Number(item.min_vbc));
+        const min_vca = data.map(item => Number(item.min_vca));
+        const max_vab = data.map(item => Number(item.max_vab));
+        const max_vbc = data.map(item => Number(item.max_vbc));
+        const max_vca = data.map(item => Number(item.max_vca));
+        const rate_vab = data.map(item => Number(item.rate_vab));
+        const rate_vbc = data.map(item => Number(item.rate_vbc));
+        const rate_vca = data.map(item => Number(item.rate_vca));
+
+        const avg_vab = getAverage(rate_vab);
+        const avg_vbc = getAverage(rate_vbc);
+        const avg_vca = getAverage(rate_vca);
+
+        let V_avg = (Number(avg_vab) + Number(avg_vbc) + Number(avg_vca)) / 3;
+
+        // Calculate Unbalance for each phase
+        let Unbalance_A = Math.abs((Number(avg_vab) - V_avg) / V_avg) * 100;
+        let Unbalance_B = Math.abs((Number(avg_vbc) - V_avg) / V_avg) * 100;
+        let Unbalance_C = Math.abs((Number(avg_vca) - V_avg) / V_avg) * 100;
+        document.getElementById('unBalA').textContent = Unbalance_A.toFixed(2);
+        document.getElementById('unBalB').textContent = Unbalance_B.toFixed(2);
+        document.getElementById('unBalC').textContent = Unbalance_C.toFixed(2);
+
+        document.getElementById('avgVab').textContent = avg_vab.toFixed(2);
+        document.getElementById('minVab').textContent = getMin(min_vab).toFixed(2);
+        document.getElementById('maxVab').textContent = getMax(max_vab).toFixed(2);
+        document.getElementById('avgVbc').textContent = avg_vbc.toFixed(2);
+        document.getElementById('minVbc').textContent = getMin(min_vbc).toFixed(2);
+        document.getElementById('maxVbc').textContent = getMax(max_vbc).toFixed(2);
+        document.getElementById('avgVca').textContent = avg_vca.toFixed(2);
+        document.getElementById('minVca').textContent = getMin(min_vca).toFixed(2);
+        document.getElementById('maxVca').textContent = getMax(max_vca).toFixed(2);
+
+
+        const rate_thda = data.map(item => item.rate_thda);
+        const rate_thdb = data.map(item => item.rate_thdb);
+        const rate_thdc = data.map(item => item.rate_thdc);
+        const min_thda = data.map(item => Number(item.min_thda));
+        const min_thdb = data.map(item => Number(item.min_thdb));
+        const min_thdc = data.map(item => Number(item.min_thdc));
+        const max_thda = data.map(item => Number(item.max_thda));
+        const max_thdb = data.map(item => Number(item.max_thdb));
+        const max_thdc = data.map(item => Number(item.max_thdc));
+
+        document.getElementById('thda').textContent = getAverage(rate_thda).toFixed(2);
+        document.getElementById('minthda').textContent = getMin(min_thda).toFixed(2);
+        document.getElementById('maxthda').textContent = getMax(max_thda).toFixed(2);
+        document.getElementById('thdb').textContent = getAverage(rate_thdb).toFixed(2);
+        document.getElementById('minthdb').textContent = getMin(min_thdb).toFixed(2);
+        document.getElementById('maxthdb').textContent = getMax(max_thdb).toFixed(2);
+        document.getElementById('thdc').textContent = getAverage(rate_thdc).toFixed(2);
+        document.getElementById('minthdc').textContent = getMin(min_thdc).toFixed(2);
+        document.getElementById('maxthdc').textContent = getMax(max_thdc).toFixed(2);
+
+
+        const rate_pf = data.map(item => item.rate_pf);
+        const rate_f = data.map(item => item.rate_f);
+        const min_pf = data.map(item => Number(item.min_pf));
+        const min_f = data.map(item => Number(item.min_f));
+        const max_pf = data.map(item => Number(item.max_pf));
+        const max_f = data.map(item => Number(item.max_f));
+
+        document.getElementById('pf').textContent = getAverage(rate_pf).toFixed(2);
+        document.getElementById('minpf').textContent = getMin(min_pf).toFixed(2);
+        document.getElementById('maxpf').textContent = getMax(max_pf).toFixed(2);
+        document.getElementById('f').textContent = getAverage(rate_f).toFixed(2);
+        document.getElementById('minf').textContent = getMin(min_f).toFixed(2);
+        document.getElementById('maxf').textContent = getMax(max_f).toFixed(2);
+
+        const sum_p = data.map(item => item.sum_p);
+        const sum_q = data.map(item => item.sum_q);
+        const price_total = data.map(item => item.price_total);
+
+        const totalSumP = sum_p.reduce((acc, value) => Number(acc) + Number(value), 0);
+        const totalSumQ = sum_q.reduce((acc, value) => Number(acc) + Number(value), 0);
+        const totalPrice = price_total.reduce((acc, value) => Number(acc) + Number(value), 0);
+        document.getElementById('total_kWh').textContent = totalSumP.toFixed(2);
+        document.getElementById('total_kVARh').textContent = totalSumQ.toFixed(2);
+        document.getElementById('total_price').textContent = totalPrice.toFixed(2);
+        document.getElementById('rasio_kVARh').textContent = (totalSumQ*100 / totalSumP).toFixed(2);
+
+        drawChart('mainChart', 'Power (kWh/kVARh)', dates, [
+            { name: 'kWh', data: sum_p },
+            { name: 'kVARh', data: sum_q }
+        ]);
+        
+    } catch (error) {
+      Swal.fire({
+          icon: 'error',
+          title: 'Error loading chart data',
+          text: 'Empty data'
+      });
+    }
+  }
+
+  function drawChart(elementId, title, dates, seriesData) {
+      const chart = echarts.init(document.getElementById(elementId));
+      const option = {
+          tooltip: { trigger: 'axis' },
+          legend: { data: seriesData.map(s => s.name) },
+          xAxis: { type: 'category', data: dates },
+          yAxis: { type: 'value' },
+          series: seriesData.map(s => ({
+              name: s.name,
+              type: 'bar',
+              data: s.data
+          }))
+      };
+      chart.setOption(option);
+  }
+  function getAverage(arr) {
+    const filteredArr = arr.filter(value => value !== 0); // Remove zero values
+    return filteredArr.length ? filteredArr.reduce((acc, value) => acc + Number(value), 0) / filteredArr.length : 0;
+  }
+  function getMin(arr) {
+    return arr.length ? Math.min(...arr) : null; // Return null if array is empty
+  }
+  function getMax(arr) {
+      return arr.length ? Math.max(...arr) : null; // Return null if array is empty
+  }
+
+  async function loadAlarm(devid, startDate, endDate) {
+    try {
+      const response = await fetch('/pme/alarmTable', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ devid, startDate, endDate })
+      });
+      const data = await response.json();
+      const tableBody = document.querySelector("#alarmTable tbody");
+      tableBody.innerHTML = ""; // Clear previous data
+
+      data.forEach(alarm => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+              <td class="p-1">${new Date(alarm.timestamp).toLocaleDateString()}<br>${new Date(alarm.timestamp).toLocaleTimeString()}</td>
+              <td class="p-1">${alarm.alarm}</td>
+              <td class="p-1">${alarm.stand}</td>
+              <td class="p-1"><b>${alarm.val}</b></td>
+          `;
+          tableBody.appendChild(row);
+      });
+    } catch (error) {
+      Swal.fire({
+          icon: 'error',
+          title: 'Error loading alarm data',
+          text: error.message
+      });
+    }
+  }
+</script>
+<%- include(footerPath) %>

@@ -1,0 +1,150 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="row g-6">
+        <div class="col-xxl-12 col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-3 col-md-3">
+                            <h5 class="mb-4">Trend Chart</h5>
+                        </div>
+                        <div class="col-9 col-md-9 col-12 mb-6">
+                            <label for="datePicker" class="form-label">Filters</label>
+                            <div class="input-group input-daterange bs-datepicker-daterange">
+                                <select id="deviceID" class="select2 form-select">
+                                    <% data.deviceList.forEach(device => { %>
+                                        <option value="<%- device.id %>"><%- device.showname %></option>
+                                    <% }) %>
+                                </select>
+                                <select id="parameter" class="select2 form-select">
+                                        <option value="ia">Ia</option>
+                                        <option value="ib">Ib</option>
+                                        <option value="ic">Ic</option>
+                                        <option value="vab">Vab</option>
+                                        <option value="vbc">Vbc</option>
+                                        <option value="vca">Vca</option>
+                                        <option value="f">Hz</option>
+                                        <option value="p">P</option>
+                                        <option value="q">Q</option>
+                                        <option value="s">S</option>
+                                        <option value="pfa">PF A</option>
+                                        <option value="pfb">PF B</option>
+                                        <option value="pfc">PF C</option>
+                                        <option value="thda">THD A</option>
+                                        <option value="thdb">THD B</option>
+                                        <option value="thdc">THD C</option>
+                                </select>
+                                <input type="text" id="datePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                                <input type="time" id="timeInput" class="form-control" step="60">
+                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="getChart();">
+                                    <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="trendChart" style="height: 400px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+  $('#datePicker').datepicker({
+      todayHighlight: true,
+      orientation: 'auto left',
+      format: 'yyyy-mm-dd', // Set format to YYYY-MM-DD
+      autoclose: true
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const now = new Date();
+
+        // Format date as YYYY-MM-DD for input type="date"
+        const formattedDate = now.toISOString().split("T")[0];
+
+        // Format time as HH:mm (24-hour format)
+        const formattedTime = now.toTimeString().slice(0, 5); // Extract HH:mm
+
+        // Set the values in the inputs
+        document.getElementById("datePicker").value = formattedDate;
+        document.getElementById("timeInput").value = formattedTime;
+
+        getChart();
+    });
+    
+    async function getChart() {
+        // Get selected values
+        const devid = document.getElementById('deviceID').value;
+        const parameter = document.getElementById('parameter').value;
+        const date = document.getElementById('datePicker').value; // MM/DD/YYYY
+        const time = document.getElementById('timeInput').value; // HH:mm
+
+        // Ensure all values are selected
+        if (!devid || !parameter || !date || !time) {
+            alert("Please select all filters before applying.");
+            return;
+        }
+
+        // Convert to ISO timestamp format (YYYY-MM-DDTHH:mm:ssZ)
+        const formattedDate = moment(date).format("YYYY-MM-DD");
+        const timestamp = `${formattedDate} ${time}:00`; // YYYY-MM-DD HH:mm:ss
+
+        console.log("Fetching data for:", { devid, parameter, timestamp });
+
+        // Call the async function
+        await loadTrendChart(devid, parameter, timestamp);
+    }
+
+    async function loadTrendChart(devid, parameter, startDate) {
+        try {
+            const response = await fetch('/pme/trendSecData', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ devid, parameter, startDate })
+            });
+            
+            const data = await response.json();
+            
+            // Extract timestamps and values
+            const timestamps = data.map(item => new Date(item.time)); // Convert to Date objects
+            const values = data.map(item => item.value);
+
+            // Draw the chart
+            drawTrendChart(timestamps, values, parameter);
+            
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error loading trend chart', text: 'No Data Found' });
+        }
+    }
+    function drawTrendChart(timestamps, values, parameter) {
+        let chartDom = document.getElementById('trendChart'); // Ensure you have a div with this ID
+        let myChart = echarts.init(chartDom);
+
+        let option = {
+            title: { text: `Trend for ${parameter}`, left: 'center' },
+            tooltip: { trigger: 'axis' },
+            xAxis: {
+                type: 'time',
+                data: timestamps,
+                axisLabel: { formatter: value => new Date(value).toLocaleTimeString() }
+            },
+            yAxis: { type: 'value', name: parameter },
+            series: [{
+                name: parameter,
+                type: 'line',
+                data: values.map((v, i) => [timestamps[i], v]), // Combine timestamps and values
+                smooth: true
+            }]
+        };
+
+        myChart.setOption(option);
+    }
+
+</script>
+
+<%- include(footerPath) %>

@@ -1,0 +1,522 @@
+<%- include(headerPath) %>
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6">
+    <!-- <div class="col-md-12 col-xxl-8">
+      <div class="card">
+        <div class="d-flex align-items-end row">
+          <div class="col-md-6 order-2 order-md-1">
+            <div class="card-body">
+              <h4 class="card-title mb-4">Congratulations <span class="fw-bold">John!</span> 🎉</h4>
+              <p class="mb-0">You have done 68% 😎 more sales today.</p>
+              <p>Check your new badge in your profile.</p>
+              <a href="javascript:;" class="btn btn-primary">View Profile</a>
+            </div>
+          </div>
+          <div class="col-md-6 text-center text-md-end order-1 order-md-2">
+            <div class="card-body pb-0 px-0 pt-2">
+              <img
+                src="../../assets/img/illustrations/illustration-john-light.png"
+                height="186"
+                class="scaleX-n1-rtl"
+                alt="View Profile"
+                data-app-light-img="illustrations/illustration-john-light.png"
+                data-app-dark-img="illustrations/illustration-john-dark.png" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    
+    <!-- <div class="col-xxl-2 col-sm-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded-3">
+                <i class="ri-shopping-cart-2-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <p class="mb-0 text-success me-1">+22%</p>
+              <i class="ri-arrow-up-s-line text-success"></i>
+            </div>
+          </div>
+          <div class="card-info mt-5">
+            <h5 class="mb-1">155k</h5>
+            <p>MTD Last Month</p>
+            <div class="badge bg-label-secondary rounded-pill">Last 4 Month</div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    
+    <!-- <div class="col-xxl-2 col-sm-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded-3">
+                <i class="ri-shopping-cart-2-line ri-24px"></i>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <p class="mb-0 text-success me-1">+22%</p>
+              <i class="ri-arrow-up-s-line text-success"></i>
+            </div>
+          </div>
+          <div class="card-info mt-5">
+            <h5 class="mb-1">155k</h5>
+            <p>Cost Prediction</p>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    
+    <div class="col-12 col-xxl-8">
+      <div class="card h-100">
+        <div class="row row-bordered g-0 h-100">
+          <div class="col-xxl-8 col-md-7 col-12 order-2 order-md-0">
+            <div class="card-header">
+              <h5 class="mb-0">Daily Usage</h5>
+            </div>
+            <div class="card-body">
+              <div id="mainChart" style="height: 300px;"></div>
+            </div>
+          </div>
+          <div class="col-xxl-4 col-md-5 col-12">
+            <div class="card-header">
+              <div class="d-flex justify-content-between">
+                <h5 class="mb-1">Summary</h5>
+              </div>
+            </div>
+            <div class="card-body pt-6">
+              <div class="row">
+                <div class="col-6 border-end">
+                  <div class="d-flex flex-column align-items-center">
+                    
+                    <p class="mt-3 mb-1">kWh</p>
+                    <h6 class="mb-0"><span id="total_kWh">0</span></h6>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="d-flex flex-column align-items-center">
+                    
+                    <p class="mt-3 mb-1">kVARh</p>
+                    <h6 class="mb-0"><span id="total_kVARh">0</span></h6>
+                  </div>
+                </div>
+              </div>
+              <hr class="my-5" />
+              <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                <div>
+                  <p class="mb-1">kVARh Ratio</p>
+                  <h6 class="mb-0"><span id="rasio_kVARh">0</span></h6>
+                </div>
+              </div>
+              <hr class="my-5" />
+              <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                <div>
+                  <p class="mb-1">Current Cost (IDR)</p>
+                  <h6 class="mb-0"><span id="total_price">0</span></h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-xxl-4 col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <div class="d-flex justify-content-between">
+            <h5 class="mb-1">Recent Alarms</h5>
+            <a href="/pme/alarms" class="btn btn-primary" type="button">All Alarms</a>
+          </div>
+        </div>
+        <div class="card-body" style="height:300px; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table border-top" id="alarmTable">
+              <thead>
+                <tr>
+                  <th class="bg-transparent border-bottom p-1">Time</th>
+                  <th class="bg-transparent border-bottom p-1">Alarm</th>
+                  <th class="text-end bg-transparent border-bottom p-1">Value</th>
+                </tr>
+              </thead>
+              <tbody class="table-border-bottom-0">
+                <tr>
+                  <td colspan="3">No Alarm</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-xxl-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="card-title m-0 me-2">Usage Each Meter</h5>
+        </div>
+        <div class="d-flex justify-content-between p-4 border-bottom">
+          <p class="mb-0 fs-xsmall">NAME</p>
+          <p class="mb-0 fs-xsmall">Total</p>
+        </div>
+        <div class="card-body" style="height: 300px; overflow-y: auto;">
+          <ul class="p-0 m-0" id="powerTable">
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+    <% 
+      let V_avg = 0;
+      let Unbalance_A = 0, Unbalance_B = 0, Unbalance_C = 0;
+
+      if (data && data.powerQuality && 
+          data.powerQuality.rate_vab !== undefined && 
+          data.powerQuality.rate_vbc !== undefined && 
+          data.powerQuality.rate_vca !== undefined) {
+        
+        // Calculate Average Voltage
+        V_avg = (Number(data.powerQuality.rate_vab) + Number(data.powerQuality.rate_vbc) + Number(data.powerQuality.rate_vca)) / 3;
+
+        // Calculate Unbalance for each phase
+        Unbalance_A = Math.abs((Number(data.powerQuality.rate_vab) - V_avg) / V_avg) * 100;
+        Unbalance_B = Math.abs((Number(data.powerQuality.rate_vbc) - V_avg) / V_avg) * 100;
+        Unbalance_C = Math.abs((Number(data.powerQuality.rate_vca) - V_avg) / V_avg) * 100;
+      }
+    %>
+    <div class="col-md-6 col-xxl-4">
+      <div class="row g-4">
+        <!-- Total Revenue chart -->
+        <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+            <div class="card-header pb-xl-2">
+              <div class="d-flex align-items-center mb-1 flex-wrap">
+                <h5 class="mb-0 me-1">V Unbalance</h5>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="timeline card-timeline mb-0">
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-primary"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        Vab <%= Number(data?.powerQuality?.rate_vab || 0).toFixed(2) %>V 
+                        (<%= (Unbalance_A || 0).toFixed(2) %>%)
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_vab || 0).toFixed(2) %> - 
+                      <%= Number(data?.powerQuality?.max_vab || 0).toFixed(2) %>
+                    </p>
+                  </div>
+                </li>
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-warning"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        Vbc <%= Number(data?.powerQuality?.rate_vbc || 0).toFixed(2) %>V 
+                        (<%= (Unbalance_B || 0).toFixed(2) %>%)
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_vbc || 0).toFixed(2) %> - 
+                      <%= Number(data?.powerQuality?.max_vbc || 0).toFixed(2) %>
+                    </p>
+                  </div>
+                </li>
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-danger"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        Vca <%= Number(data?.powerQuality?.rate_vca || 0).toFixed(2) %>V 
+                        (<%= (Unbalance_C || 0).toFixed(2) %>%)
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_vca || 0).toFixed(2) %> - 
+                      <%= Number(data?.powerQuality?.max_vca || 0).toFixed(2) %>
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+            <div class="card-header pb-xl-2">
+              <div class="d-flex align-items-center mb-1 flex-wrap">
+                <h5 class="mb-0 me-1">Harmonic (%)</h5>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="timeline card-timeline mb-0">
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-primary"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        THD A - <%= Number(data?.powerQuality?.rate_thda || 0).toFixed(2) %>%
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_thda || 0).toFixed(2) %>% - 
+                      <%= Number(data?.powerQuality?.max_thda || 0).toFixed(2) %>%
+                    </p>
+                  </div>
+                </li>
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-warning"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        THD B - <%= Number(data?.powerQuality?.rate_thdb || 0).toFixed(2) %>%
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_thdb || 0).toFixed(2) %>% - 
+                      <%= Number(data?.powerQuality?.max_thdb || 0).toFixed(2) %>%
+                    </p>
+                  </div>
+                </li>
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-danger"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        THD C - <%= Number(data?.powerQuality?.rate_thdc || 0).toFixed(2) %>%
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_thdc || 0).toFixed(2) %>% - 
+                      <%= Number(data?.powerQuality?.max_thdc || 0).toFixed(2) %>%
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+            <div class="card-header pb-xl-2">
+              <div class="d-flex align-items-center mb-1 flex-wrap">
+                <h5 class="mb-0 me-1">Frequency (Hz)</h5>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="timeline card-timeline mb-0">
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-primary"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        Average <%= Number(data?.powerQuality?.rate_f || 0).toFixed(2) %> Hz
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_f || 0).toFixed(2) %> Hz - 
+                      <%= Number(data?.powerQuality?.max_f || 0).toFixed(2) %> Hz
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+          <div class="card h-100">
+            <div class="card-header pb-xl-2">
+              <div class="d-flex align-items-center mb-1 flex-wrap">
+                <h5 class="mb-0 me-1">Power Factor</h5>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="timeline card-timeline mb-0">
+                <li class="timeline-item timeline-item-transparent">
+                  <span class="timeline-point timeline-point-primary"></span>
+                  <div class="timeline-event">
+                    <div class="timeline-header mb-0">
+                      <h6 class="mb-0">
+                        Average <%= Number(data?.powerQuality?.rate_pf || 0).toFixed(2) %>
+                      </h6>
+                    </div>
+                    <p class="mb-1">
+                      <%= Number(data?.powerQuality?.min_pf || 0).toFixed(2) %> - 
+                      <%= Number(data?.powerQuality?.max_pf || 0).toFixed(2) %>
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-xxl-4 col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <div class="d-flex justify-content-between">
+            <h5 class="mb-1">Main Meter Usage Trend</h5>
+          </div>
+          <p class="mb-0 card-subtitle">Last 5 Months</p>
+        </div>
+        <div class="card-body pb-1 px-0" id="monthlyPowerChart" style="height: 300px;">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const socket = io();
+  socket.on('alarm_update', (alarms) => {
+    const tableBody = document.querySelector("#alarmTable tbody");
+    tableBody.innerHTML = ""; // Clear previous data
+
+    alarms.forEach(alarm => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="p-1">${new Date(alarm.timestamp).toLocaleDateString()}<br>${new Date(alarm.timestamp).toLocaleTimeString()}</td>
+            <td class="p-1">${alarm.showname}<br>${alarm.type}</td>
+            <td class="p-1"><b>${alarm.value}</b><br>${alarm.standard}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+  });
+
+  async function fetchPowerData() {
+    try {
+      const response = await axios.post('/pme/getMonthlyPowerData', {}); // Sending an empty body
+      const data = response.data;
+      const tableBody = document.querySelector("#powerTable");
+      // console.log(data);
+      tableBody.innerHTML = ""; // Clear previous data
+      
+      data.forEach(item => {
+          const listItem = document.createElement("li");
+          listItem.classList.add("d-flex", "align-items-center", "mb-6");
+          listItem.innerHTML = `
+            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+              <div class="me-2">
+                <h6 class="mb-1">${item.showname}</h6>
+                <small>IDR ${item.total_price_total}</small>
+              </div>
+              <div class="">${item.total_sum_p}kWh<br>${item.total_sum_q}kVARh</div>
+            </div>
+          `;
+          tableBody.appendChild(listItem);
+      });
+    } catch (error) {
+      console.error("Error fetching power data:", error);
+    }
+  }
+
+  let chart = echarts.init(document.getElementById('mainChart'));
+  async function fetchChartData() {
+    try {
+        const response = await axios.post('/pme/getDailyPowerData', {}); // Send empty POST request
+        const { data, totals } = response.data;
+        console.log(data);
+        // Extract data for ECharts
+        const dates = data.map(row => new Date(row.date).toISOString().split("T")[0]);
+        const sum_p_values = data.map(row => parseFloat(row.total_sum_p));
+        const sum_q_values = data.map(row => parseFloat(row.total_sum_q));
+
+        // Update total spans
+        document.getElementById("total_kWh").textContent = totals.total_kWh.toFixed(2);
+        document.getElementById("total_kVARh").textContent = totals.total_kVARh.toFixed(2);
+        document.getElementById("total_price").textContent = totals.total_price.toFixed(2);
+
+        // Update chart
+        chart.setOption({
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['kWh', 'kVARh'],
+                bottom: 0
+            },
+            xAxis: {
+                type: 'category',
+                data: dates
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Energy (kWh/kVARh)'
+            },
+            series: [
+                {
+                    name: 'kWh',
+                    type: 'bar',
+                    data: sum_p_values,
+                    color: '#007bff'
+                },
+                {
+                    name: 'kVARh',
+                    type: 'bar',
+                    data: sum_q_values,
+                    color: '#ffcc00'
+                }
+            ]
+        });
+    } catch (error) {
+        console.error("Error fetching power data:", error);
+    }
+  }
+
+  async function fetchLastFiveMonthsPowerData() {
+    try {
+      const response = await axios.post('/pme/getLastFiveMonthsPowerData', {});
+      console.log('API Response:', response.data); // Debugging
+
+        // Ensure response.data is an array
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        if (data.length === 0) {
+            console.warn("No data available for the last five months.");
+            return;
+        }
+
+        // Extract months and power values
+        const months = data.map(row => row.month);
+        const sum_p_values = data.map(row => parseFloat(row.total_sum_p) || 0); // Ensure numbers
+
+        // Initialize ECharts
+        const chart = echarts.init(document.getElementById("monthlyPowerChart"));
+
+        // Set Chart Options
+        const option = {
+            tooltip: { trigger: "axis" },
+            xAxis: { type: "value", name: "kWh" },
+            yAxis: { type: "category", data: months },
+            series: [
+                { name: "kWh", type: "bar", data: sum_p_values, barWidth: "50%", color: "#4CAF50" }
+            ]
+        };
+
+        // Apply Options to Chart
+        chart.setOption(option);
+    } catch (error) {
+        console.error("Error fetching monthly power data:", error);
+    }
+  }
+  fetchLastFiveMonthsPowerData()
+  fetchPowerData();
+  fetchChartData();
+  setInterval(()=>{
+    fetchPowerData();
+    fetchChartData();
+  }
+  , 300000);
+</script>
+<%- include(footerPath) %>

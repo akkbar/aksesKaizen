@@ -1,0 +1,165 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="row g-6">
+        <div class="col-xxl-12 col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-3 col-md-3">
+                            <h5 class="mb-4">Trend Chart</h5>
+                        </div>
+                        <div class="col-9 col-md-9 col-12 mb-6">
+                            <label for="datePicker" class="form-label">Filters</label>
+                            <div class="input-group input-daterange bs-datepicker-daterange">
+                                <select id="deviceID" class="select2 form-select">
+                                    <% data.deviceList.forEach(device => { %>
+                                        <option value="<%- device.id %>"><%- device.showname %></option>
+                                    <% }) %>
+                                </select>
+                                <input type="text" id="datePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="getChart();">
+                                    <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="voltageChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="ampereChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="pfChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="frequencyChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="thdChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div id="powerChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+  var bsDatepickerRange = $('.bs-datepicker-daterange')
+  if (bsDatepickerRange.length) {
+    bsDatepickerRange.datepicker({
+      todayHighlight: true,
+      orientation: 'auto left',
+      format: 'yyyy-mm-dd', // Set format to YYYY-MM-DD
+      autoclose: true
+    });
+  }
+  $(document).ready(function() {
+    getChart()
+  });
+  
+    async function loadChart(devid, startDate) {
+        try {
+            const response = await fetch('/pme/trendMinuteData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ devid, startDate })
+            });
+            const data = await response.json();
+
+            const dates = data.map(item => item.date);
+            const vab = data.map(item => item.vab);
+            const vbc = data.map(item => item.vbc);
+            const vca = data.map(item => item.vca);
+            const ia = data.map(item => item.ia);
+            const ib = data.map(item => item.ib);
+            const ic = data.map(item => item.ic);
+            const pf = data.map(item => item.pf);
+            const f = data.map(item => item.f);
+            const thda = data.map(item => item.thda);
+            const thdb = data.map(item => item.thdb);
+            const thdc = data.map(item => item.thdc);
+            const p = data.map(item => item.p);
+            const q = data.map(item => item.q);
+            const s = data.map(item => item.s);
+
+            drawChart('voltageChart', 'Voltage (V)', dates, [
+                { name: 'Vab', data: vab },
+                { name: 'Vbc', data: vbc },
+                { name: 'Vca', data: vca }
+            ]);
+
+            drawChart('ampereChart', 'Current (A)', dates, [
+                { name: 'Ia', data: ia },
+                { name: 'Ib', data: ib },
+                { name: 'Ic', data: ic }
+            ]);
+
+            drawChart('pfChart', 'Power Factor', dates, [
+                { name: 'PF', data: pf }
+            ]);
+
+            drawChart('frequencyChart', 'Frequency (Hz)', dates, [
+                { name: 'Frequency', data: f }
+            ]);
+
+            drawChart('thdChart', 'THD (%)', dates, [
+                { name: 'THD A', data: thda },
+                { name: 'THD B', data: thdb },
+                { name: 'THD C', data: thdc }
+            ]);
+
+            drawChart('powerChart', 'Power (W/VAR/VA)', dates, [
+                { name: 'W', data: p },
+                { name: 'VAR', data: q },
+                { name: 'VA', data: s }
+            ]);
+            
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    }
+
+    function drawChart(elementId, title, dates, seriesData) {
+        const chart = echarts.init(document.getElementById(elementId));
+        const option = {
+            title: { text: title },
+            tooltip: { trigger: 'axis' },
+            legend: { data: seriesData.map(s => s.name) },
+            xAxis: { type: 'category', data: dates },
+            yAxis: { type: 'value' },
+            series: seriesData.map(s => ({
+                name: s.name,
+                type: 'line',
+                data: s.data
+            }))
+        };
+        chart.setOption(option);
+    }
+
+    function getChart() {
+        var startDate = $('#datePicker').val();
+        var devid = $('#deviceID').val();
+        loadChart(devid, startDate);
+    }
+</script>
+
+<%- include(footerPath) %>

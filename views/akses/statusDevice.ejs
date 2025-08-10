@@ -1,0 +1,96 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-3 col-md-3">
+              <h5 class="mb-4">Status Device</h5>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+              <button class="btn btn-primary" onclick="loadPorts()">🔄 Refresh Ports</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table" cellpadding="5" cellspacing="0" style="margin-top:10px;">
+            <thead>
+                <tr>
+                <th>#</th>
+                <th>Path</th>
+                <th>Manufacturer</th>
+                <th>Vendor ID</th>
+                <th>Product ID</th>
+                <th>Serial Number</th>
+                <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="portTableBody">
+                <tr><td colspan="7">Klik "Refresh Ports" untuk melihat daftar, Fingerprint port Saat ini: <%= data.portPath %>, Relay port Saat ini: <%= data.relayPort %></td></tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    const currentFingerprintPort = '<%= data.portPath %>';
+    const currentRelayPort = '<%= data.relayPort %>';
+    async function loadPorts() {
+    const res = await fetch('/akses/detectDevice');
+    const data = await res.json();
+
+    const tableBody = document.getElementById('portTableBody');
+    tableBody.innerHTML = ''; // clear old rows
+
+    if (data.ports.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="7">Tidak ada port terdeteksi</td></tr>`;
+        return;
+    }
+
+    data.ports.forEach((port, index) => {
+        const isFingerprint = port.path === currentFingerprintPort;
+        const isRelay = port.path === currentRelayPort;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${port.path}</td>
+        <td>${port.manufacturer}</td>
+        <td>${port.vendorId}</td>
+        <td>${port.productId}</td>
+        <td>${port.serialNumber}</td>
+        <td>
+            <button class="btn btn-primary" onclick="setAsFingerprint('${port.path}')">
+                ${isFingerprint ? '✓ Fingerprint (Active)' : 'Set as Fingerprint'}
+            </button>
+            <button class="btn btn-success" onclick="setAsRelay('${port.path}')">
+                ${isRelay ? '✓ Relay (Active)' : 'Set as Relay'}
+            </button>
+        </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    }
+async function setAsFingerprint(portPath) {
+  const res = await fetch('/akses/setFingerprint', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ port: portPath })
+  });
+  
+  const result = await res.json();
+  alert(result.message || 'Success');
+}
+
+async function setAsRelay(portPath) {
+  const res = await fetch('/akses/setRelay', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ port: portPath })
+  });
+  
+  const result = await res.json();
+  alert(result.message || 'Success');
+}
+</script>
+
+<%- include(footerPath) %>

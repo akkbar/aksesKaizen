@@ -1,0 +1,118 @@
+<%- include(headerPath) %>
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6">
+    <div class="col-md-12 col-xxl-12">
+      <div class="card">
+        <div class="d-flex align-items-end row">
+          <div class="col-md-9 order-2 order-md-1">
+            <div class="card-body">
+              <h4 class="card-title mb-4"><i class="ri-money-dollar-circle-line ri-26px"></i> Price Setting</h4>
+              <p class="mb-0">Halaman ini digunakan untuk menentukan harga per kWh listrik pada setiap jam untuk perhitungan prediksi biaya listrik. Setiap perubahan akan langsung diterapkan.</p>
+              <p><i>This page is used to define the electricity price per kWh for each hour in the electricity cost prediction calculation. Any changes will be applied immediately.</i></p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center text-md-end order-1 order-md-2">
+            <div class="card-body pb-0 px-0 pt-0">
+              <img
+                src="/assets/img/illustrations/price.jpeg"
+                height="200"
+                class="scaleX-n1-rtl"
+                alt="Price"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xxl-6 col-sm-6">
+      <div class="card">
+        <div class="card-body table-responsive">
+            <table class="table" id="table">
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                <% data.priceList.forEach(price => { %>
+                    <tr>
+                        <td><%= ('0' + price.jam).slice(-2) %>:00</td>
+                        <td><%= (Number(price.harga) || 0).toFixed(2) %></td>
+                        <td>
+                            <!-- Add any action buttons here -->
+                            <button class="btn btn-primary" onclick="show_modal(<%= price.harga %>, '<%= ('0' + price.jam).slice(-2) %>:00', <%= price.jam %>)" >Edit</button>
+                        </td>
+                    </tr>
+                <% }) %>
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="edit_data">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-body">
+              <div class="text-center mb-6">
+                  <h4 class="mb-2">Edit Price at <span id="jamDisplay"></span></h4>
+              </div>
+              <div class="row">
+                <div class="mb-3 col-12 col-md-12 fv-plugins-icon-container">
+                    <div class="form-floating form-floating-outline">
+                        <input type="number" id="harga" name="harga" class="form-control" placeholder="Price">
+                        <label for="harga">Price</label>
+                    </div>
+                    <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                </div>
+                <div class="col-12 text-center d-flex flex-wrap justify-content-center gap-4 row-gap-4">
+                    <button type="button" class="btn btn-primary waves-effect waves-light" onclick="edit_data_exe()">Edit</button>
+                    <button type="reset" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal" aria-label="Close">
+                        Cancel
+                    </button>
+                </div>
+              </div>
+              <span class="text-red" id="edit_data_warning"></span>
+          </div>
+      </div>
+  </div>
+</div>
+<script>
+  var editId;
+  function show_modal(harga, jamDisplay, jam) {
+      editId = jam;
+      $('#jamDisplay').text(jamDisplay);
+      $('#harga').val(harga);
+      $('#edit_data').modal('show');
+  }
+  function edit_data_exe() {
+    document.getElementById('edit_data_warning').innerHTML = '';
+    axios.post('/pme/editPrice', {
+        harga: $('#harga').val(),
+        editId: editId
+    })
+    .then(function (response) {
+        if (response.status === 201) {
+            document.getElementById('edit_data_warning').innerHTML = '';
+            $('#edit_data').modal('hide');
+            location.reload();
+        }
+    })
+    .catch(function (error) {
+        if (error.response) {
+            if (error.response.status === 400) {
+                document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+            } else if (error.response.status === 500) {
+                document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+            } else {
+                document.getElementById('edit_data_warning').innerHTML = error.message;
+            }
+        } else {
+            document.getElementById('edit_data_warning').innerHTML = 'An unexpected error occurred.';
+        }
+    });
+  }
+</script>
+<%- include(footerPath) %>

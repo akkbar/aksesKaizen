@@ -1,0 +1,276 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Manage Users</h5>
+            <button onclick="addData()" class="btn btn-success float-right"><i class="ri-add-circle-line"></i> Add</button>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table" id="table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="add_data">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="text-center mb-6">
+                    <h4 class="mb-2">Add User</h4>
+                </div>
+                <div class="row">
+                    <div class="mb-3 col-12 col-md-12 fv-plugins-icon-container">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="addusername" name="addusername" class="form-control" placeholder="Username">
+                            <label for="addusername">Login username</label>
+                        </div>
+                        <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3 col-12 col-md-12 fv-plugins-icon-container">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="addfullname" name="addfullname" class="form-control" placeholder="Name">
+                            <label for="addfullname">Name</label>
+                        </div>
+                        <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3 col-12 col-md-12 fv-plugins-icon-container">
+                        <div class="form-floating form-floating-outline">
+                            <select id="adduser_role" class="select2 form-select">
+                                <option value="Operator">Operator</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <label for="adduser_role">Role</label>
+                          </div>
+                    </div>
+                    <div class="mb-3 col-12">
+                        <div class="form-group">
+                            <label>Password</label><br>
+                            All new account added by this feature will be registered using <b>OA123654</b> as default Password
+                        </div>
+                    </div>
+                    <div class="col-12 text-center d-flex flex-wrap justify-content-center gap-4 row-gap-4">
+                        <button type="button" class="btn btn-primary waves-effect waves-light" onclick="add_data_exe()">Add</button>
+                        <button type="reset" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal" aria-label="Close">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                <span class="text-red" id="add_data_warning"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_data">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="text-center mb-6">
+                    <h4 class="mb-2">Edit User</h4>
+                </div>
+                <div class="row">
+                    <div class="mb-3 col-12 col-md-12 fv-plugins-icon-container">
+                        <div class="form-floating form-floating-outline">
+                            <select id="edituser_role" class="select2 form-select">
+                                <option value="Operator">Operator</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <label for="edituser_role">Role</label>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-12">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" value="1" id="editReset">
+                            <label class="form-check-label" for="defaultCheck1"> Reset and Use <b>OA123654</b> as Password </label>
+                        </div>
+                    </div>
+                    <div class="col-12 text-center d-flex flex-wrap justify-content-center gap-4 row-gap-4">
+                        <button type="button" class="btn btn-primary waves-effect waves-light" onclick="edit_data_exe()">Edit</button>
+                        <button type="reset" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal" aria-label="Close">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                <span class="text-red" id="edit_data_warning"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var editId;
+    function show_modal(id) {
+        editId = id;
+        $('#edit_data').modal('show');
+        axios.post('/users/get', { editId: editId })
+            .then((response) => {
+                if (response.status === 201) {
+                    $('#edituser_role').val(response.data.data.user_role).trigger('change')
+                    $('#edit_data_warning').html('');
+                }
+            })
+            .catch((error) => {
+                if (error.response && error.response.status === 400) {
+                    $('#edit_data_warning').html(error.response.data.message);
+                } else if (error.response && error.response.status === 500) {
+                    $('#edit_data_warning').html(error.response.data.message);
+                } else {
+                    $('#edit_data_warning').html(error.message);
+                }
+            });
+    }
+    function edit_data_exe() {
+        document.getElementById('edit_data_warning').innerHTML = '';
+        axios.post('/users/updateUser', {
+            user_role: $('#edituser_role').val(),
+            isreset: $('#editReset').is(':checked') ? 1 : 0,
+            editId: editId
+        })
+        .then(function (response) {
+            if (response.status === 201) {
+                document.getElementById('edit_data_warning').innerHTML = '';
+                $('#edit_data').modal('hide');
+                table.ajax.reload(null, false);
+            }
+        })
+        .catch(function (error) {
+            if (error.response) {
+                if (error.response.status === 400) {
+                    document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+                } else if (error.response.status === 500) {
+                    document.getElementById('edit_data_warning').innerHTML = error.response.data.message;
+                } else {
+                    document.getElementById('edit_data_warning').innerHTML = error.message;
+                }
+            } else {
+                document.getElementById('edit_data_warning').innerHTML = 'An unexpected error occurred.';
+            }
+        });
+    }
+    function delete_modal(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You are about to delete',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, do it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.post('/users/removeUser', { id: id })
+                    .then((response) => {
+                        if (response.status === 201) {
+                            table.ajax.reload(null, false);
+                        }
+                    })
+                    .catch((error) => {
+                        Swal.fire('Error!', error.response.data, 'error');
+                    });
+            }
+        });
+    }
+    function addData(){
+        $('#add_data').modal('show');
+    }
+    function add_data_exe() {
+        document.getElementById('add_data_warning').innerHTML = '';
+        const userName = document.getElementById('addusername').value;
+        const fullName = document.getElementById('addfullname').value;
+        const userRole = document.getElementById('adduser_role').value;
+        axios.post('/users/create', { username: userName, fullname: fullName, user_role: userRole })
+            .then(function (response) {
+                if (response.status === 201) {
+                    document.getElementById('add_data_warning').innerHTML = '';
+                    $('#add_data').modal('hide');
+                    document.getElementById('addusername').value = '';
+                    document.getElementById('addfullname').value = '';
+                    table.ajax.reload(null, false);
+                }
+            })
+            .catch(function (error) {
+                if (error.response) {
+                    if (error.response.status === 400) {
+                        document.getElementById('add_data_warning').innerHTML = error.response.data.message;
+                    } else if (error.response.status === 500) {
+                        document.getElementById('add_data_warning').innerHTML = error.response.data.message;
+                    } else {
+                        document.getElementById('add_data_warning').innerHTML = error.message;
+                    }
+                } else {
+                    document.getElementById('add_data_warning').innerHTML = 'An unexpected error occurred.';
+                }
+            });
+    }
+	var table;
+    $(document).ready(function() {
+        table = $('#table').DataTable({ 
+            processing: true,
+            serverSide: true,
+            order: [],
+            stateSave: true,
+            ajax: {
+                url: "/users",
+                type: "POST",
+                data: function ( data ) {
+                    // data.start_date = $('#start_date').val();
+                    // data.end_date = $('#end_date').val();
+                    // data.start_time = $('#start_time').val();
+                    // data.end_time = $('#end_time').val();
+                    // data.eq_id = $('#eq_id').val();
+                    // data.area = $('#area').val();
+                    // data.status = $('#status').val();
+                }
+            },
+            // "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+            //     if ( aData[9] != "" ){
+            //         $('td', nRow).css('background-color', '#a4d3eb');
+            //     }
+            // },
+            columnDefs: [
+                // { visible: false, targets: [ 2, 6] },
+                { orderable: false, targets: [3] }
+            ],
+            aoColumns: [
+                null,
+                null,
+                null,
+                null
+                ],
+            dom:
+            "<'row'<'col-xl-4 col-lg-5 col-md-5 order-1 order-md-0'B>>" +
+            "<'row'<'col-lg-6 col-md-6 col-sm-12 col-12'l><'col-lg-6 col-md-6 col-sm-12 col-12'f>>" +
+            "<'row'<'col-lg-12 col-md-12 col-12 table-responsive'tr>>" +
+            "<'row'<'col-lg-5 col-md-5 col-12'i><'col-lg-7 col-md-7 col-12'p>>",
+            buttons: [{
+                    extend:    'excel',
+                    text:      '<i class="ri-file-excel-2-line"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success'
+                },{
+                    extend: 'colvis',
+                    className: 'btn btn-default',
+                    postfixButtons: ['colvisRestore']
+                }],
+                fade: false,
+            language: {
+                buttons: {
+                    colvis: 'Columns'
+                },
+                searchPlaceholder: "Search records",
+                search: ""
+            }
+        });
+    });
+</script>
+
+<%- include(footerPath) %>

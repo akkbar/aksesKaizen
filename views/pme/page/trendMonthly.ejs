@@ -1,0 +1,395 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="row g-6 mb-4">
+        <div class="col-xxl-9 col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-3 col-md-3">
+                            <h5 class="mb-4">Monthly Main kWh-kVARh</h5>
+                        </div>
+                        <div class="col-8 col-md-8 col-12 mb-6">
+                            <label for="dateRangePicker" class="form-label">Filters</label>
+                            <div class="input-group input-daterange bs-datepicker-daterange">
+                                <input type="text" id="dateRangePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                                <span class="input-group-text">to</span>
+                                <input type="text" id="dateRangePicker2" placeholder="MM/DD/YYYY" class="form-control" />
+                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="loadChartData();">
+                                    <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-12 p-2">
+                            <div id="hourlyChart" style="height: 400px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 me-2">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-7">
+                        <div class="d-flex align-items-center">
+                        <h4 class="mb-0">IDR <span id="priceTotal"></span></h4>
+                    </div>
+                    <ul class="p-0 m-0">
+                        <li class="d-flex align-items-center mb-4">
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-1">kWh</h6>
+                                    <p class="mb-0">Active Power</p>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="h6 mb-0" id="activePower">xxx</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-1">kVARh</h6>
+                                    <p class="mb-0">Reactive Power</p>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="h6 mb-0" id="reactivePower">xxx</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-1">%</h6>
+                                    <p class="mb-0">Power Ratio</p>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="h6 mb-0" id="powerRatio">xxx</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-6">
+        <div class="col-xxl-12 col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-3 col-md-3">
+                            <h5 class="mb-4">Trend Chart</h5>
+                        </div>
+                        <div class="col-9 col-md-9 col-12 mb-6">
+                            <label for="datePicker" class="form-label">Filters</label>
+                            <div class="input-group input-daterange bs-datepicker-daterange">
+                                <select id="deviceID" class="select2 form-select">
+                                    <% data.deviceList.forEach(device => { %>
+                                        <option value="<%- device.id %>"><%- device.showname %></option>
+                                    <% }) %>
+                                </select>
+                                <input type="text" id="datePicker" placeholder="MM/DD/YYYY" class="form-control" />
+                                <span class="input-group-text">to</span>
+                                <input type="text" id="datePicker2" placeholder="MM/DD/YYYY" class="form-control" />
+                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="getChart();">
+                                    <span class="tf-icons ri-check-double-line ri-16px me-2"></span>Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 col-md-6">
+                            <div id="voltageChart" style="height: 300px;"></div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <div id="ampereChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 col-md-6">
+                            <div id="pfChart" style="height: 300px;"></div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <div id="frequencyChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 col-md-6">
+                            <div id="thdChart" style="height: 300px;"></div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <div id="powerChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+  var bsDatepickerRange = $('.bs-datepicker-daterange')
+  if (bsDatepickerRange.length) {
+    bsDatepickerRange.datepicker({
+      todayHighlight: true,
+      orientation: 'auto left',
+      format: 'yyyy-mm-dd', // Set format to YYYY-MM-DD
+      autoclose: true
+    });
+  }
+  $(document).ready(function() {
+    loadChartData();
+    getChart()
+  });
+  function loadChartData() {
+    var startDate = $('#dateRangePicker').val();
+    var endDate = $('#dateRangePicker2').val();
+
+    $.ajax({
+        url: '/pme/trendMonthlyMain',
+        type: 'POST',
+        data: { startDate: startDate, endDate: endDate},
+        success: function(data) {
+            if (!data || data.length === 0) {
+                console.warn('No data received. Clearing chart.');
+                
+                // Clear existing chart if empty data is returned
+                var chart = echarts.init(document.getElementById('hourlyChart'));
+                chart.clear();
+                
+                // Reset HTML spans
+                $('#activePower').text('0.00 kWh');
+                $('#reactivePower').text('0.00 kVARh');
+                $('#powerRatio').text('0%');
+                $('#priceTotal').text('0.00');
+
+                return; // Stop further processing
+            }
+
+            var dates = [];
+            var seriesDataP = {};
+            var seriesDataQ = {};
+            var devices = {};
+
+            data.forEach(function(item) {
+                if (!dates.includes(item.date)) {
+                    dates.push(item.date);
+                }
+                if (!seriesDataP[item.devid]) {
+                    seriesDataP[item.devid] = {};
+                }
+                if (!seriesDataQ[item.devid]) {
+                    seriesDataQ[item.devid] = {};
+                }
+                seriesDataP[item.devid][item.date] = item.sum_p;
+                seriesDataQ[item.devid][item.date] = item.sum_q;
+                devices[item.devid] = item.showname;
+            });
+
+            dates.sort(); // Ensure dates are sorted
+
+            var series = [];
+            var totalDataP = new Array(dates.length).fill(0);
+            var totalDataQ = new Array(dates.length).fill(0);
+
+            for (var devid in seriesDataP) {
+                var dataP = [];
+                var dataQ = [];
+                dates.forEach(function(date, index) {
+                    var valueP = parseFloat(seriesDataP[devid][date]) || 0;
+                    var valueQ = parseFloat(seriesDataQ[devid][date]) || 0;
+                    dataP.push(valueP);
+                    dataQ.push(valueQ);
+                    totalDataP[index] += valueP;
+                    totalDataQ[index] += valueQ;
+                });
+                series.push({
+                    name: devices[devid] + ' (kWh)',
+                    type: 'bar',
+                    stack: 'kWh',
+                    data: dataP
+                });
+                series.push({
+                    name: devices[devid] + ' (kVARh)',
+                    type: 'bar',
+                    stack: 'kVARh',
+                    data: dataQ
+                });
+            }
+
+            // Add a series for the total values as a line
+            series.push({
+                name: 'Total kWh',
+                type: 'line',
+                data: totalDataP,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.value.toFixed(2) + ' kWh';
+                    }
+                },
+                itemStyle: { color: 'red' },
+                lineStyle: { width: 2 }
+            });
+
+            series.push({
+                name: 'Total kVARh',
+                type: 'line',
+                data: totalDataQ,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.value.toFixed(2) + ' kVARh';
+                    }
+                },
+                itemStyle: { color: 'blue' },
+                lineStyle: { width: 2 }
+            });
+
+            var grandTotalKWh = totalDataP.reduce((a, b) => a + b, 0).toFixed(2);
+            var grandTotalKVARh = totalDataQ.reduce((a, b) => a + b, 0).toFixed(2);
+            var formattedTotalKWh = grandTotalKWh.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedTotalKVARh = grandTotalKVARh.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var ratio = (Number(grandTotalKVARh) / (Number(grandTotalKWh)) * 100).toFixed(2);
+
+            // Update HTML span elements
+            $('#activePower').text(formattedTotalKWh + ' kWh');
+            $('#reactivePower').text(formattedTotalKVARh + ' kVARh');
+            $('#powerRatio').text(ratio + '%');
+
+            var chart = echarts.init(document.getElementById('hourlyChart'));
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: Object.values(devices).map(device => device + ' (kWh)').concat(Object.values(devices).map(device => device + ' (kVARh)')).concat(['Total kWh', 'Total kVARh'])
+                },
+                xAxis: { type: 'category', data: dates },
+                yAxis: { type: 'value', axisLabel: { formatter: '{value}' } },
+                series: series
+            };
+            chart.setOption(option);
+
+            var totalPrice = 0;
+            data.forEach(function(item) {
+                totalPrice += parseFloat(item.price_total) || 0;
+            });
+
+            var formattedTotalPrice = totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            $('#priceTotal').text(formattedTotalPrice);
+        },
+
+        error: function(error) {
+            console.error('Error fetching chart data:', error);
+        }
+    });
+  }
+
+
+    async function loadChart(devid, startDate, endDate) {
+        try {
+            const response = await fetch('/pme/trendMonthlyData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ devid, startDate, endDate })
+            });
+            const data = await response.json();
+
+            const dates = data.map(item => item.date);
+            const rate_vab = data.map(item => item.rate_vab);
+            const rate_vbc = data.map(item => item.rate_vbc);
+            const rate_vca = data.map(item => item.rate_vca);
+            const rate_ia = data.map(item => item.rate_ia);
+            const rate_ib = data.map(item => item.rate_ib);
+            const rate_ic = data.map(item => item.rate_ic);
+            const rate_pf = data.map(item => item.rate_pf);
+            const rate_f = data.map(item => item.rate_f);
+            const rate_thda = data.map(item => item.rate_thda);
+            const rate_thdb = data.map(item => item.rate_thdb);
+            const rate_thdc = data.map(item => item.rate_thdc);
+            const sum_p = data.map(item => item.sum_p);
+            const sum_q = data.map(item => item.sum_q);
+
+            drawChart('voltageChart', 'Voltage (V)', dates, [
+                { name: 'Vab', data: rate_vab },
+                { name: 'Vbc', data: rate_vbc },
+                { name: 'Vca', data: rate_vca }
+            ]);
+
+            drawChart('ampereChart', 'Current (A)', dates, [
+                { name: 'Ia', data: rate_ia },
+                { name: 'Ib', data: rate_ib },
+                { name: 'Ic', data: rate_ic }
+            ]);
+
+            drawChart('pfChart', 'Power Factor', dates, [
+                { name: 'PF', data: rate_pf }
+            ]);
+
+            drawChart('frequencyChart', 'Frequency (Hz)', dates, [
+                { name: 'Frequency', data: rate_f }
+            ]);
+
+            drawChart('thdChart', 'THD (%)', dates, [
+                { name: 'THD A', data: rate_thda },
+                { name: 'THD B', data: rate_thdb },
+                { name: 'THD C', data: rate_thdc }
+            ]);
+
+            drawChart('powerChart', 'Power (kWh/kVARh)', dates, [
+                { name: 'kWh', data: sum_p },
+                { name: 'kVARh', data: sum_q }
+            ]);
+            
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    }
+
+    function drawChart(elementId, title, dates, seriesData) {
+        const chart = echarts.init(document.getElementById(elementId));
+        const option = {
+            title: { text: title },
+            tooltip: { trigger: 'axis' },
+            legend: { data: seriesData.map(s => s.name) },
+            xAxis: { type: 'category', data: dates },
+            yAxis: { type: 'value' },
+            series: seriesData.map(s => ({
+                name: s.name,
+                type: 'line',
+                data: s.data
+            }))
+        };
+        chart.setOption(option);
+    }
+
+    function getChart() {
+        var startDate = $('#datePicker').val();
+        var endDate = $('#datePicker2').val();
+        var devid = $('#deviceID').val();
+        loadChart(devid, startDate, endDate);
+    }
+</script>
+
+<%- include(footerPath) %>

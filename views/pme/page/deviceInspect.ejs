@@ -1,0 +1,309 @@
+<div class="row g-6">
+    <div class="col-md-12 col-xxl-6">
+        <div class="card h-100">
+            <div class="row">
+                <div class="col-md-7 order-2 order-md-1">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4"><%= data.device.showname %></h4>
+                        <p class="mb-0">Address: <%= data.device.ipnum %>:<%= data.device.port %> ID: <%= data.device.unit_id %></p>
+                        <p><%= data.device.conf %></p>
+                        <p><%= data.device.phase %>-Phase Power Meter</p>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">Fitur ini berfungsi untuk melihat data dari Power Meter secara real time</p>
+                    </div>
+                    <div class="card-body">
+                        <ul class="p-0 m-0">
+                            <li class="d-flex align-items-center mb-6">
+                                <div class="avatar avatar-md flex-shrink-0 me-4">
+                                    <div class="avatar-initial bg-dark rounded-3">
+                                        Hz
+                                    </div>
+                                </div>
+                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                    <div class="me-2">
+                                    <h6 class="mb-1">Frequency</h6>
+                                    <small>[<%= data.device.f %>] <%= data.device.f_type %></small>
+                                    </div>
+                                    <div class="badge bg-label-primary rounded-pill"><span id="f">----</span></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-5 text-center text-md-end order-1 order-md-2">
+                    <div class="card-body pb-0 px-0 pt-2">
+                    <img
+                        src="/assets/img/products/<%= data.device.dev_img %>"
+                        height="186"
+                        class="scaleX-n1-rtl"
+                        alt="View Profile" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xxl-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title m-0 me-2">Voltage (V) Data</h5>
+            </div>
+            <div class="d-flex justify-content-between p-4 border-bottom">
+                <p class="mb-0 fs-xsmall">MIN <%= parseFloat(data.device.v_down).toFixed(2).replace(/\.?0+$/, '') %> V</p>
+                <p class="mb-0 fs-xsmall">MAX <%= parseFloat(data.device.v_up).toFixed(2).replace(/\.?0+$/, '') %> V</p>
+            </div>
+            <div class="card-body">
+                <ul class="p-0 m-0">
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                R
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase A-B</h6>
+                            <small>[<%= data.device.vab %>] <%= data.device.v_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="vab">----</span></div>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                S
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase B-C</h6>
+                            <small>[<%= data.device.vbc %>] <%= data.device.v_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="vbc">----</span></div>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                T
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase C-A</h6>
+                            <small>[<%= data.device.vca %>] <%= data.device.v_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="vca">----</span></div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-xxl-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title m-0 me-2">Current (A) Data</h5>
+            </div>
+            <div class="d-flex justify-content-between p-4 border-bottom">
+                <p class="mb-0 fs-xsmall">MIN <%= parseFloat(data.device.i_down).toFixed(2).replace(/\.?0+$/, '') %> A</p>
+                <p class="mb-0 fs-xsmall">MAX <%= parseFloat(data.device.i_up).toFixed(2).replace(/\.?0+$/, '') %> A</p>
+            </div>
+            <div class="card-body">
+                <ul class="p-0 m-0">
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                R
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase A</h6>
+                            <small>[<%= data.device.ia %>] <%= data.device.i_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="ia">----</span></div>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                S
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase B</h6>
+                            <small>[<%= data.device.ib %>] <%= data.device.i_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="ib">----</span></div>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-center mb-6">
+                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                            <div class="avatar-initial bg-dark rounded-3">
+                                T
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                            <h6 class="mb-1">Phase C</h6>
+                            <small>[<%= data.device.ic %>] <%= data.device.i_type %></small>
+                            </div>
+                            <div class="badge bg-label-primary rounded-pill"><span id="ic">----</span></div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xxl-12">
+        <div class="card h-100">
+            <div class="row row-bordered g-0 h-100">
+                <div class="col-md-7 col-12 order-2 order-md-0">
+                    <div class="card-header">
+                        <h5 class="mb-0">Power Quality</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-xxl-5 col-md-5">
+                                <ul class="p-0 m-0">
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                R
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Power Factor A</h6>
+                                                <small>[<%= data.device.pfa %>] <%= data.device.pf_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="pfa">----</span></div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                S
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Power Factor B</h6>
+                                                <small>[<%= data.device.pfb %>] <%= data.device.pf_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="pfb">----</span></div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                T
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Power Factor C</h6>
+                                                <small>[<%= data.device.pfc %>] <%= data.device.pf_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="pfc">----</span></div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-xxl-7 col-md-7">
+                                <ul class="p-0 m-0">
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                R
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Total Harmonic Distortion A</h6>
+                                                <small>[<%= data.device.thda %>] <%= data.device.thd_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="thda">----</span></div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                S
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Total Harmonic Distortion B</h6>
+                                                <small>[<%= data.device.thdb %>] <%= data.device.thd_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="thdb">----</span></div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center mb-6">
+                                        <div class="avatar avatar-md flex-shrink-0 me-4">
+                                            <div class="avatar-initial bg-dark rounded-3">
+                                                T
+                                            </div>
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-1">Total Harmonic Distortion C</h6>
+                                                <small>[<%= data.device.thdc %>] <%= data.device.thd_type %></small>
+                                            </div>
+                                            <div class="badge bg-label-primary rounded-pill"><span id="thdc">----</span></div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 col-12">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1">Accumulated Power</h5>
+                        </div>
+                        <p class="mb-0 card-subtitle"><i class="ri-24-hours-line"></i> Last month connection <span id="connectTime"></span></p>
+                    </div>
+                    <div class="card-body pt-6">
+                        <div class="row">
+                            <div class="col-6 border-end">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-label-dark rounded-3">
+                                            kWh
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 mb-1">Active Power</p>
+                                    <h6 class="mb-0" id="kwh">----</h6>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-label-dark rounded-3">
+                                            kVARh
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 mb-1">Reactive Power</p>
+                                    <h6 class="mb-0" id="kvarh">----</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-5" />
+                        <!-- <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                            <div>
+                                <p class="mb-1">kVARh Ratio</p>
+                                <h6 class="mb-0" id="ratiokvarh">----</h6>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,224 @@
+<div class="col-12 col-xxl-12">
+    <div class="card h-100">
+        <div class="row row-bordered g-0 h-100">
+            <div class="col-xxl-10 col-md-8 col-12 order-2 order-md-0">
+                <div class="card-header">
+                    <h5 class="mb-0">Daily Usage</h5>
+                </div>
+                <div class="card-body">
+                    <div id="mainChart" style="height: 300px;"></div>
+                </div>
+            </div>
+            <div class="col-xxl-2 col-md-4 col-12">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="mb-1">Summary</h5>
+                    </div>
+                </div>
+                <div class="card-body pt-6">
+                    <div class="row">
+                        <div class="col-6 border-end">
+                            <div class="d-flex flex-column align-items-center">
+                                <p class="mt-3 mb-1">kWh</p>
+                                <h6 class="mb-0"><span id="total_kWh">0</span></h6>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex flex-column align-items-center">
+                                <p class="mt-3 mb-1">kVARh</p>
+                                <h6 class="mb-0"><span id="total_kVARh">0</span></h6>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-5" />
+                    <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                        <div>
+                            <p class="mb-1">kVARh Ratio</p>
+                            <h6 class="mb-0"><span id="rasio_kVARh">0</span></h6>
+                        </div>
+                    </div>
+                    <hr class="my-5" />
+                    <div class="d-flex justify-content-around align-items-center flex-wrap gap-2">
+                        <div>
+                            <p class="mb-1">Current Cost (IDR)</p>
+                            <h6 class="mb-0"><span id="total_price">0</span></h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<div class="col-12 col-xxl-4 col-md-6">
+    <div class="card h-100">
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <h5 class="mb-1">Recent Alarms</h5>
+                <a href="/pme/alarms" class="btn btn-primary" type="button">All Alarms</a>
+            </div>
+        </div>
+        <div class="card-body" style="height:300px; overflow-y: auto;">
+            <div class="table-responsive">
+                <table class="table border-top" id="alarmTable">
+                    <thead>
+                        <tr>
+                            <th class="bg-transparent border-bottom p-1">Time</th>
+                            <th class="bg-transparent border-bottom p-1">Alarm</th>
+                            <th class="text-end bg-transparent border-bottom p-1">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                        <tr>
+                            <td colspan="3">No Alarm</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+    
+
+<div class="col-md-6 col-xxl-4">
+    <div class="row g-4">
+        <div class="col-md-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-xl-2">
+                    <div class="d-flex align-items-center mb-1 flex-wrap">
+                        <h5 class="mb-0 me-1">V Unbalance</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline card-timeline mb-0">
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-primary"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">Vab</h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-warning"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">Vbc</h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-danger"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">Vca</h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-xl-2">
+                    <div class="d-flex align-items-center mb-1 flex-wrap">
+                        <h5 class="mb-0 me-1">Harmonic (%)</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline card-timeline mb-0">
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-primary"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">THD A - </h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-warning"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">THD B - </h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-danger"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">THD C -</h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-xl-2">
+                    <div class="d-flex align-items-center mb-1 flex-wrap">
+                        <h5 class="mb-0 me-1">Frequency (Hz)</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline card-timeline mb-0">
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-primary"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">Average </h6>
+                                </div>
+                                <p class="mb-1">- </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-xl-2">
+                    <div class="d-flex align-items-center mb-1 flex-wrap">
+                        <h5 class="mb-0 me-1">Power Factor</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline card-timeline mb-0">
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point timeline-point-primary"></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-0">
+                                    <h6 class="mb-0">Average </h6>
+                                </div>
+                                <p class="mb-1"> - </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-12 col-xxl-4 col-md-6">
+    <div class="card h-100">
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <h5 class="mb-1">Main Meter Usage Trend</h5>
+            </div>
+            <p class="mb-0 card-subtitle">Last 5 Months</p>
+        </div>
+        <div class="card-body pb-1 px-0" id="monthlyPowerChart" style="height: 300px;">
+            
+        </div>
+    </div>
+</div>

@@ -1,0 +1,153 @@
+<%- include(headerPath) %>
+<div class="flex-grow-1 container-p-y container-fluid">
+    <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-3 col-md-3">
+              <h5 class="mb-4">Add RFID</h5>
+            </div>
+            <div class="col-8 col-md-8 col-12 mb-6">
+              
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+          <div class="row">
+            <div class="col-6 col-md-6 mt-4">
+                <form id="enrollForm">
+                    <div class="form-floating form-floating-outline mb-4 mt-4">
+                        <input
+                            type="text"
+                            id="nama"
+                            step="0.01"
+                            name="nama"
+                            class="form-control"
+                            value=""
+                            required
+                            placeholder="Nama Pengguna" />
+                        <label for="persen">Nama Pengguna</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Mulai Enroll</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer table-responsive">
+          <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="status" id="status"></div>
+                <div class="status" id="rfidResult"></div>
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+<script>
+    const form = document.getElementById('enrollForm');
+    const namaInput = document.getElementById('nama');
+    const statusEl = document.getElementById('status');
+    const rfidResult = document.getElementById('rfidResult');
+
+    let pollingInterval = null;
+
+    // Fungsi untuk menghentikan polling
+    function stopPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
+
+    // Fungsi untuk memulai polling status
+    function startPolling() {
+        stopPolling(); // Hentikan polling lama jika ada
+
+        pollingInterval = setInterval(async () => {
+            try {
+                const res = await fetch('/akses/statusEnrollRFID');
+                const statusData = await res.json();
+
+                // Perbarui UI berdasarkan status dari backend
+                statusEl.textContent = statusData.message;
+
+                // Jika status gagal, beri warna merah dan reset setelah beberapa detik
+                if (statusData.step === 'failed') {
+                    statusEl.classList.add('error');
+                    // Tunggu sebentar, lalu kembali polling untuk status baru
+                    setTimeout(() => {
+                       statusEl.classList.remove('error');
+                    }, 2000);
+                } else {
+                    statusEl.classList.remove('error');
+                }
+                
+                // Jika kartu sudah siap didaftarkan
+                if (statusData.step === 'ready') {
+                    stopPolling();
+                    statusEl.textContent = '✅ Kartu terkonfirmasi! Menyimpan data...';
+                    await submitFinalData(statusData.rfid);
+                }
+
+                // Jika mode sudah tidak aktif (misal karena timeout)
+                if (statusData.step === 'inactive' && statusEl.textContent !== '✅ Berhasil!') {
+                    stopPolling();
+                    statusEl.textContent = '❌ Mode pendaftaran tidak aktif atau waktu habis.';
+                    statusEl.classList.add('error');
+                }
+
+            } catch (err) {
+                console.error('Polling error:', err);
+                stopPolling();
+            }
+        }, 1000); // Cek status setiap 1 detik
+    }
+
+    // Fungsi untuk men-submit data final
+    async function submitFinalData(confirmedRfid) {
+        const nama = namaInput.value;
+        try {
+            const res = await fetch('/akses/submitEnrollRFID', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama })
+            });
+
+            const resultData = await res.json();
+
+            if (res.ok) {
+                statusEl.textContent = '✅ Berhasil!';
+                rfidResult.innerHTML = `Pengguna <strong>${resultData.data.nama}</strong> terdaftar dengan RFID: <strong>${resultData.data.rfid}</strong>`;
+            } else {
+                statusEl.textContent = `❌ Gagal menyimpan: ${resultData.message}`;
+                statusEl.classList.add('error');
+            }
+        } catch (err) {
+            console.error('Submit error:', err);
+            statusEl.textContent = '❌ Terjadi kesalahan saat menyimpan data.';
+            statusEl.classList.add('error');
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        statusEl.textContent = '🔄 Mengaktifkan mode enroll...';
+        statusEl.classList.remove('error');
+        rfidResult.textContent = '';
+        
+        try {
+            // Aktifkan mode enroll di server
+            await fetch('/akses/startEnrollRFID', { method: 'POST' });
+            
+            // Mulai polling ke server untuk cek status
+            startPolling();
+
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = '❌ Gagal memulai enroll.';
+            statusEl.classList.add('error');
+        }
+    });
+</script>
+<%- include(footerPath) %>
