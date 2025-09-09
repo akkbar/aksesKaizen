@@ -35,12 +35,9 @@
           <div class="row">
   <% data.url.forEach(stream => { 
        const u = (stream.originalUrl || '').toLowerCase();
-       const isHls = u.includes('.m3u8') || u.includes('/hls/');
-       const isMjpeg = u.includes('/mjpeg/') || u.endsWith('.mjpg') || u.includes('mjpeg=1');
-       const isJpeg = u.endsWith('.jpg') || u.endsWith('.jpeg') || u.includes('/jpeg/') || u.includes('/sjpeg/');
-  %>
+       const isHls = u.includes('.m3u8') || u.includes('/hls/'); %>
     <div class="col-12 col-md-6 col-lg-6 mb-4">
-      <% if (stream.type === 'hls' || isHls) { %>
+      <% if (isHls) { %>
         <video id="vid_<%= stream.id %>" controls autoplay muted playsinline style="width:100%;max-height:400px;background:#000;"></video>
         <script>
           (function() {
@@ -52,11 +49,9 @@
               hls.attachMedia(video);
               hls.on(Hls.Events.ERROR, function (event, data) {
                 if (data.fatal) {
-                  switch (data.type) {
-                    case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
-                    case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
-                    default: hls.destroy(); break;
-                  }
+                  if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+                  else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+                  else hls.destroy();
                 }
               });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -64,23 +59,8 @@
             }
           })();
         </script>
-      <% } else if (stream.type === 'mjpeg' || isMjpeg) { %>
-        <img src="<%= stream.proxyUrl %>" class="img-fluid" style="max-height:400px;" />
-      <% } else if (stream.type === 'jpeg' || isJpeg) { %>
-        <img id="jpg_<%= stream.id %>" src="<%= stream.proxyUrl %>?t=<%= Date.now() %>" class="img-fluid" style="max-height:400px;" />
-        <script>
-          (function(){
-            const img = document.getElementById('jpg_<%= stream.id %>');
-            setInterval(() => {
-              const u = new URL(img.src, window.location.href);
-              u.searchParams.set('t', Date.now().toString());
-              img.src = u.toString();
-            }, 1000);
-          })();
-        </script>
       <% } else { %>
-        <!-- fallback terakhir: coba video dulu -->
-        <video src="<%= stream.proxyUrl %>" controls autoplay muted playsinline style="width:100%;max-height:400px;background:#000;"></video>
+        <img src="<%= stream.proxyUrl %>" class="img-fluid" style="max-height:400px;" />
       <% } %>
     </div>
   <% }) %>

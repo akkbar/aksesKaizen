@@ -7,82 +7,81 @@ const { URL } = require('url');
 
 const router = express.Router();
 
-function decodeB64Url(s) {
-  return Buffer.from(s, 'base64url').toString('utf8');
-}
-function encodeB64Url(s) {
-  return Buffer.from(s, 'utf8').toString('base64url');
-}
-function httpClientFor(urlStr) {
-  return urlStr.startsWith('https:') ? https : http;
-}
+const d64 = s => Buffer.from(s, 'base64url').toString('utf8');
+const e64 = s => Buffer.from(s, 'utf8').toString('base64url');
+const clientFor = u => u.startsWith('https:') ? https : http;
 
 router.get('/b64/:encoded', (req, res) => {
   let target;
-  try {
-    target = decodeB64Url(req.params.encoded);
-  } catch {
-    return res.status(400).send('Bad encoded url');
-  }
+  try { target = d64(req.params.encoded); }
+  catch { return res.status(400).send('Bad encoded url'); }
 
   const isM3U8 = target.toLowerCase().includes('.m3u8');
 
-  // No-cache headers (biar benar2 live)
+  // Jangan cache
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  const client = httpClientFor(target);
-  const upstreamReq = client.get(target, (upRes) => {
-    const ctype = (upRes.headers['content-type'] || '').toLowerCase();
+  const c = clientFor(target);
+  const up = c.get(target, (ur) => {
+    const ctype = (ur.headers['content-type'] || '').toLowerCase();
+    const asM3U8 = isM3U8 || ctype.includes('application/vnd.apple.mpegurl') || ctype.includes('application/x-mpegurl');
 
-    // Case 1: HLS playlist → rewrite
-    if (isM3U8 || ctype.includes('application/vnd.apple.mpegurl') || ctype.includes('application/x-mpegurl')) {
-      let data = '';
-      upRes.setEncoding('utf8');
-      upRes.on('data', (chunk) => (data += chunk));
-      upRes.on('end', () => {
+    if (asM3U8) {
+      let text = '';
+      ur.setEncoding('utf8');
+      ur.on('data', chunk => text += chunk);
+      ur.on('end', () => {
         try {
           const base = new URL(target);
-          const lines = data.split('\n').map((line) => {
-            const trimmed = line.trim();
-            // HLS: baris URL adalah baris yang bukan komentar (#)
-            if (!trimmed || trimmed.startsWith('#')) return line;
+          const rewriteAbs = (s) => `/stream/b64/${e64(new URL(s, base).href)}`;
 
-            // Buat URL absolut relatif ke playlist source
-            const abs = new URL(trimmed, base).href;
-            // Bungkus pakai proxy lagi
-            const prox = `/stream/b64/${encodeB64Url(abs)}`;
+          const lines = text.split('\n').map((line) => {
+            const L = line.trim();
+
+            // Baris komentar selain KEY/MAP → biarkan
+            if (L.startsWith('#')) {
+              // Rewrite URI= di KEY / SESSION-KEY / MAP
+              if (/^#EXT-X-(SESSION-)?KEY/.test(L) || /^#EXT-X-MAP/.test(L)) {
+                return line.replace(/URI="([^"]+)"/g, (_, uri) => {
+                  const prox = rewriteAbs(uri);
+                  return `URI="${prox}"`;
+                });
+              }
+              return line;
+            }
+
+            // Baris URL (variant playlist/segment)
+            if (!L) return line;
+            const prox = rewriteAbs(L);
             return prox;
           });
-          const body = lines.join('\n');
-          res.status(upRes.statusCode || 200);
+
+          res.status(ur.statusCode || 200);
           res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-          res.end(body, 'utf8');
+          res.end(lines.join('\n'), 'utf8');
         } catch (e) {
           res.status(502).send('Playlist rewrite error');
         }
       });
-      upRes.on('error', () => res.status(502).send('Upstream error'));
+      ur.on('error', () => res.status(502).send('Upstream error'));
       return;
     }
 
-    // Case 2: MJPEG / JPEG / HLS segments / lainnya → langsung pipa
-    res.status(upRes.statusCode || 200);
-    // Teruskan header penting (cth boundary MJPEG, content-type, content-length jika ada)
-    for (const [k, v] of Object.entries(upRes.headers)) {
+    // Selain M3U8: segmen TS/M4S/JPEG/MJPEG → langsung pipe
+    res.status(ur.statusCode || 200);
+    for (const [k, v] of Object.entries(ur.headers)) {
       if (typeof v !== 'undefined') res.setHeader(k, v);
     }
-    pipeline(upRes, res, (err) => {
+    pipeline(ur, res, (err) => {
       if (err && !res.headersSent) res.status(502).end('Bad gateway');
     });
   });
 
-  upstreamReq.setTimeout(30000, () => upstreamReq.destroy(new Error('Upstream timeout')));
-  upstreamReq.on('error', () => {
-    if (!res.headersSent) res.status(502).send('Upstream error');
-  });
-  req.on('close', () => upstreamReq.destroy());
+  up.setTimeout(30000, () => up.destroy(new Error('Upstream timeout')));
+  up.on('error', () => { if (!res.headersSent) res.status(502).send('Upstream error'); });
+  req.on('close', () => up.destroy());
 });
 
 module.exports = router;

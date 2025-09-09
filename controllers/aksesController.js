@@ -15,37 +15,29 @@ const { Buffer } = require('buffer');
 
 // controller
 function detectStreamType(url) {
-  const u = url.trim().toLowerCase();
-  const noQuery = u.split('?')[0]; // buang query
-
-  if (noQuery.includes('.m3u8') || /\/hls(\/|$)/i.test(noQuery)) return 'hls';
-  if (noQuery.includes('/mjpeg/') || noQuery.endsWith('.mjpg') || u.includes('mjpeg=1')) return 'mjpeg';
-  if (noQuery.endsWith('.jpg') || noQuery.endsWith('.jpeg') || /\/s?jpeg\//i.test(noQuery)) return 'jpeg';
-
+  const u = (url || '').trim().toLowerCase();
+  const noQ = u.split('?')[0];
+  if (noQ.includes('.m3u8') || /(^|\/)hls(\/|$)/.test(noQ)) return 'hls';
+  if (noQ.includes('/mjpeg/') || noQ.endsWith('.mjpg') || u.includes('mjpeg=1')) return 'mjpeg';
+  if (noQ.endsWith('.jpg') || noQ.endsWith('.jpeg') || /\/s?jpeg\//.test(u)) return 'jpeg';
   return 'unknown';
 }
 
 exports.getHomePage = async (req, res) => {
-  try {
-    const header = { pageTitle: 'Dashboard', user: req.session.user };
-    const rawStreams = await aksesModel.getActiveStreams(); // {url}
-
-    const streams = rawStreams.map((row, idx) => {
-        const fullUrl = row.url.trim();
-        return {
-            id: `s${idx+1}`,
-            originalUrl: fullUrl,
-            type: detectStreamType(fullUrl),
-            proxyUrl: `/stream/b64/${Buffer.from(fullUrl).toString('base64url')}`,
-        };
-    });
-
-    res.render('akses/index', { header, data: { url: streams } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal server error');
-  }
+  const header = { pageTitle: 'Dashboard', user: req.session.user };
+  const rawStreams = await aksesModel.getActiveStreams(); // {url}
+  const streams = rawStreams.map((row, i) => {
+    const fullUrl = row.url.trim();
+    return {
+      id: `s${i+1}`,
+      originalUrl: fullUrl,
+      type: detectStreamType(fullUrl),
+      proxyUrl: `/stream/b64/${Buffer.from(fullUrl).toString('base64url')}`,
+    };
+  });
+  res.render('akses/index', { header, data: { url: streams } });
 };
+
 
 // exports.getHomePage = async (req, res) => {
 //     try {
