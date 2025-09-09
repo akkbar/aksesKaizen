@@ -13,11 +13,15 @@ const momenttz = require('moment-timezone');
 const LOCAL_TZ = 'Asia/Jakarta';
 const { Buffer } = require('buffer');
 
+// controller
 function detectStreamType(url) {
-  const u = url.toLowerCase();
-  if (u.endsWith('.m3u8') || u.includes('/hls/')) return 'hls';
-  if (u.includes('/mjpeg/') || u.endsWith('.mjpg')) return 'mjpeg';
-  if (u.endsWith('.jpg') || u.includes('/sjpeg/') || u.includes('/jpeg/')) return 'jpeg';
+  const u = url.trim().toLowerCase();
+  const noQuery = u.split('?')[0]; // buang query
+
+  if (noQuery.includes('.m3u8') || /\/hls(\/|$)/i.test(noQuery)) return 'hls';
+  if (noQuery.includes('/mjpeg/') || noQuery.endsWith('.mjpg') || u.includes('mjpeg=1')) return 'mjpeg';
+  if (noQuery.endsWith('.jpg') || noQuery.endsWith('.jpeg') || /\/s?jpeg\//i.test(noQuery)) return 'jpeg';
+
   return 'unknown';
 }
 
@@ -27,14 +31,13 @@ exports.getHomePage = async (req, res) => {
     const rawStreams = await aksesModel.getActiveStreams(); // {url}
 
     const streams = rawStreams.map((row, idx) => {
-      const fullUrl = row.url.trim();
-      const encoded = Buffer.from(fullUrl).toString('base64url');
-      return {
-        id: `s${idx + 1}`,
-        originalUrl: fullUrl,
-        type: detectStreamType(fullUrl),
-        proxyUrl: `/stream/b64/${encoded}`, // selalu lewat proxy
-      };
+        const fullUrl = row.url.trim();
+        return {
+            id: `s${idx+1}`,
+            originalUrl: fullUrl,
+            type: detectStreamType(fullUrl),
+            proxyUrl: `/stream/b64/${Buffer.from(fullUrl).toString('base64url')}`,
+        };
     });
 
     res.render('akses/index', { header, data: { url: streams } });
