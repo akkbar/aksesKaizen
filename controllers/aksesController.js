@@ -11,34 +11,65 @@ const fp = require('../devices/fp');
 let ioInstance = null;
 const momenttz = require('moment-timezone');
 const LOCAL_TZ = 'Asia/Jakarta';
+const { Buffer } = require('buffer');
 
+function detectStreamType(url) {
+  const u = url.toLowerCase();
+  if (u.endsWith('.m3u8') || u.includes('/hls/')) return 'hls';
+  if (u.includes('/mjpeg/') || u.endsWith('.mjpg')) return 'mjpeg';
+  if (u.endsWith('.jpg') || u.includes('/sjpeg/') || u.includes('/jpeg/')) return 'jpeg';
+  return 'unknown';
+}
 
 exports.getHomePage = async (req, res) => {
-    try {
-        const header = {pageTitle: 'Dashboard', user: req.session.user}
-        const rawStreams = await aksesModel.getActiveStreams();
-        const streams = rawStreams.map((stream) => {
-            // Contoh: ambil UID dan TOKEN dari URL asli
-            const parts = stream.url.split('/');
-            const uid = parts[parts.length - 2];
-            const token = parts[parts.length - 1];
+  try {
+    const header = { pageTitle: 'Dashboard', user: req.session.user };
+    const rawStreams = await aksesModel.getActiveStreams(); // {url}
 
-            return {
-                ...stream,
-                uid,
-                token,
-                proxyUrl: `/stream/${uid}/${token}`,
-            };
-        });
-        const data = {
-            url: streams
-        }
-        res.render('akses/index', {header: header, data: data})
-    } catch (error) {
-        console.error(error)
-        res.status(500).send('Internal server error')
-    }
-}
+    const streams = rawStreams.map((row, idx) => {
+      const fullUrl = row.url.trim();
+      const encoded = Buffer.from(fullUrl).toString('base64url');
+      return {
+        id: `s${idx + 1}`,
+        originalUrl: fullUrl,
+        type: detectStreamType(fullUrl),
+        proxyUrl: `/stream/b64/${encoded}`, // selalu lewat proxy
+      };
+    });
+
+    res.render('akses/index', { header, data: { url: streams } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
+  }
+};
+
+// exports.getHomePage = async (req, res) => {
+//     try {
+//         const header = {pageTitle: 'Dashboard', user: req.session.user}
+//         const rawStreams = await aksesModel.getActiveStreams();
+//         const streams = rawStreams.map((stream) => {
+//             // Contoh: ambil UID dan TOKEN dari URL asli
+//             const parts = stream.url.split('/');
+//             const uid = parts[parts.length - 2];
+//             const token = parts[parts.length - 1];
+
+//             return {
+//                 ...stream,
+//                 uid,
+//                 token,
+//                 proxyUrl: `/stream/${uid}/${token}`,
+//             };
+//         });
+//         const data = {
+//             url: streams
+//         }
+//         res.render('akses/index', {header: header, data: data})
+//     } catch (error) {
+//         console.error(error)
+//         res.status(500).send('Internal server error')
+//     }
+// }
 //====================================================================================================================
 //====================================================================================================================
 //====================================================================================================================

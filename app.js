@@ -66,26 +66,28 @@ waitOn({
     })
   );
 
-  app.use('/stream/:uid/:token', (req, res, next) => {
-    const { uid, token } = req.params;
+  // app.use('/stream/:uid/:token', (req, res, next) => {
+  //   const { uid, token } = req.params;
 
-    const proxy = createProxyMiddleware({
-      target: SHINOBI_HOST,
-      changeOrigin: true,
-      pathRewrite: (path, req) => {
-        const { uid, token } = req.params;
-        return `/${SHINOBI_GROUP_KEY}/mjpeg/${uid}/${token}`;
-      },
-      onProxyReq: (proxyReq, req, res) => {
-        // 🛠️ Tambahkan header Accept agar dianggap "browser"
-        proxyReq.setHeader('Accept', 'image/webp,image/apng,image/*,*/*;q=0.8');
-        proxyReq.setHeader('User-Agent', 'Mozilla/5.0');
-      },
-      proxyTimeout: 10000, // opsional
-    });
+  //   const proxy = createProxyMiddleware({
+  //     target: SHINOBI_HOST,
+  //     changeOrigin: true,
+  //     pathRewrite: (path, req) => {
+  //       const { uid, token } = req.params;
+  //       return `/${SHINOBI_GROUP_KEY}/mjpeg/${uid}/${token}`;
+  //     },
+  //     onProxyReq: (proxyReq, req, res) => {
+  //       // 🛠️ Tambahkan header Accept agar dianggap "browser"
+  //       proxyReq.setHeader('Accept', 'image/webp,image/apng,image/*,*/*;q=0.8');
+  //       proxyReq.setHeader('User-Agent', 'Mozilla/5.0');
+  //     },
+  //     proxyTimeout: 10000, // opsional
+  //   });
 
-    proxy(req, res, next);
-  });
+  //   proxy(req, res, next);
+  // });
+  const streamRouter = require('./routes/stream');
+  app.use('/stream', streamRouter);
 
   const server = http.createServer(app)
   const io = require('socket.io')(server);

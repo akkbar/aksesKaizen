@@ -1,4 +1,4 @@
-<%- include(headerPath) %>
+<!-- <%- include(headerPath) %>
 <div class="container-fluid flex-grow-1 container-p-y">
     <div class="row g-6">
         <div class="col-12 col-md-12 col-lg-12">
@@ -18,5 +18,83 @@
             </div>
         </div>
     </div>
+</div>
+<%- include(footerPath) %> -->
+
+
+<%- include(headerPath) %>
+<div class="container-fluid flex-grow-1 container-p-y">
+  <div class="row g-6">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header"><h5 class="mb-0">Active Stream</h5></div>
+        <div class="card-body">
+          <!-- hls.js untuk HLS -->
+          <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+          <div class="row">
+            <% data.url.forEach(stream => { %>
+              <div class="col-12 col-md-6 col-lg-6 mb-4">
+                <% if (stream.type === 'hls') { %>
+                  <video id="vid_<%= stream.id %>" controls autoplay muted playsinline style="width:100%;max-height:400px;background:#000;"></video>
+                  <script>
+                    (function() {
+                      const video = document.getElementById('vid_<%= stream.id %>');
+                      const src = '<%= stream.proxyUrl %>';
+                      if (Hls.isSupported()) {
+                        const hls = new Hls({ lowLatencyMode: true });
+                        hls.loadSource(src);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.ERROR, function (event, data) {
+                          if (data.fatal) {
+                            switch (data.type) {
+                              case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
+                              case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
+                              default: hls.destroy(); break;
+                            }
+                          }
+                        });
+                      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = src; // Safari/iOS
+                      } else {
+                        // fallback minimal: tampilkan link
+                        const link = document.createElement('a');
+                        link.href = src;
+                        link.textContent = 'Open stream';
+                        video.parentNode.replaceChild(link, video);
+                      }
+                    })();
+                  </script>
+
+                <% } else if (stream.type === 'mjpeg') { %>
+                  <img src="<%= stream.proxyUrl %>" class="img-fluid" style="max-height:400px;" />
+
+                <% } else if (stream.type === 'jpeg') { %>
+                  <img id="jpg_<%= stream.id %>" src="<%= stream.proxyUrl %>?t=<%= Date.now() %>" class="img-fluid" style="max-height:400px;" />
+                  <script>
+                    (function(){
+                      const img = document.getElementById('jpg_<%= stream.id %>');
+                      function refresh() {
+                        const u = new URL(img.src, window.location.href);
+                        u.searchParams.set('t', Date.now().toString());
+                        img.src = u.toString();
+                      }
+                      // refresh tiap 1 detik (sesuaikan fps)
+                      setInterval(refresh, 1000);
+                    })();
+                  </script>
+
+                <% } else { %>
+                  <!-- Unknown → coba render sebagai MJPEG -->
+                  <img src="<%= stream.proxyUrl %>" class="img-fluid" style="max-height:400px;" />
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <%- include(footerPath) %>
