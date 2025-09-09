@@ -88,3 +88,64 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `user_role`, `plant_id`, `last_app`, `token`, `add_date`, `update_date`, `user_img`, `isactive`, `last_login`) VALUES (3, 'admin', '$2b$10$I/Vs/mDsuohyG2rzFbcqpuAVHMSAvVHRlfwbqoU7FIkb0k7DctMna', 'Admin', 'Admin', 100, NULL, NULL, '2025-01-11 07:59:38', '2025-01-12 13:49:03', NULL, 1, NULL);
 
+-- --------------------------------------------------------
+-- Host:                         127.0.0.1
+-- Server version:               8.4.3 - MySQL Community Server - GPL
+-- Server OS:                    Linux
+-- HeidiSQL Version:             12.3.0.6589
+-- --------------------------------------------------------
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+
+-- Dumping database structure for akses
+CREATE DATABASE IF NOT EXISTS `akses` /*!40100 DEFAULT CHARACTER SET utf8mb3 */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `akses`;
+
+-- Dumping structure for table akses.log_akses
+CREATE TABLE IF NOT EXISTS `log_akses` (
+  `akses_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `data_raw` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `is_success` tinyint DEFAULT NULL,
+  `in_time` datetime DEFAULT NULL,
+  `out_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`akses_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=utf8mb3;
+
+-- Data exporting was unselected.
+
+-- Dumping structure for table akses.url_stream
+CREATE TABLE IF NOT EXISTS `url_stream` (
+  `url` varchar(500) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+-- Data exporting was unselected.
+
+-- Dumping structure for table akses.user_akses
+CREATE TABLE IF NOT EXISTS `user_akses` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `tipe` tinyint DEFAULT NULL,
+  `id_tipe` varchar(50) DEFAULT NULL,
+  `nama` varchar(50) DEFAULT NULL,
+  `is_active` tinyint DEFAULT '1',
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
+
+-- Data exporting was unselected.
+
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
