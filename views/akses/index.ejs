@@ -1,4 +1,4 @@
-<!-- <%- include(headerPath) %>
+<%- include(headerPath) %>
 <div class="container-fluid flex-grow-1 container-p-y">
     <div class="row g-6">
         <div class="col-12 col-md-12 col-lg-12">
@@ -18,57 +18,5 @@
             </div>
         </div>
     </div>
-</div>
-<%- include(footerPath) %> -->
-
-
-<%- include(headerPath) %>
-<div class="container-fluid flex-grow-1 container-p-y">
-  <div class="row g-6">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header"><h5 class="mb-0">Active Stream</h5></div>
-        <div class="card-body">
-          <!-- hls.js untuk HLS -->
-        <script src="/assets/js/hls.js"></script>
-
-          <div class="row">
-  <% data.url.forEach(stream => { 
-       const u = (stream.originalUrl || '').toLowerCase();
-       const isHls = u.includes('.m3u8') || u.includes('/hls/'); %>
-    <div class="col-12 col-md-6 col-lg-6 mb-4">
-      <% if (isHls) { %>
-        <video id="vid_<%= stream.id %>" controls autoplay muted playsinline style="width:100%;max-height:400px;background:#000;"></video>
-        <script>
-          (function() {
-            const video = document.getElementById('vid_<%= stream.id %>');
-            const src = '<%= stream.proxyUrl %>';
-            if (Hls.isSupported()) {
-              const hls = new Hls({ lowLatencyMode: true });
-              hls.loadSource(src);
-              hls.attachMedia(video);
-              hls.on(Hls.Events.ERROR, function (event, data) {
-                if (data.fatal) {
-                  if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-                  else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                  else hls.destroy();
-                }
-              });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-              video.src = src; // Safari/iOS
-            }
-          })();
-        </script>
-      <% } else { %>
-        <img src="<%= stream.proxyUrl %>" class="img-fluid" style="max-height:400px;" />
-      <% } %>
-    </div>
-  <% }) %>
-</div>
-
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 <%- include(footerPath) %>

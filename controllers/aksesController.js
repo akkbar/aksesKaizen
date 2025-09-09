@@ -11,60 +11,34 @@ const fp = require('../devices/fp');
 let ioInstance = null;
 const momenttz = require('moment-timezone');
 const LOCAL_TZ = 'Asia/Jakarta';
-const { Buffer } = require('buffer');
 
-// controller
-function detectStreamType(url) {
-  const u = (url || '').trim().toLowerCase();
-  const noQ = u.split('?')[0];
-  if (noQ.includes('.m3u8') || /(^|\/)hls(\/|$)/.test(noQ)) return 'hls';
-  if (noQ.includes('/mjpeg/') || noQ.endsWith('.mjpg') || u.includes('mjpeg=1')) return 'mjpeg';
-  if (noQ.endsWith('.jpg') || noQ.endsWith('.jpeg') || /\/s?jpeg\//.test(u)) return 'jpeg';
-  return 'unknown';
-}
 
 exports.getHomePage = async (req, res) => {
-  const header = { pageTitle: 'Dashboard', user: req.session.user };
-  const rawStreams = await aksesModel.getActiveStreams(); // {url}
-  const streams = rawStreams.map((row, i) => {
-    const fullUrl = row.url.trim();
-    return {
-      id: `s${i+1}`,
-      originalUrl: fullUrl,
-      type: detectStreamType(fullUrl),
-      proxyUrl: `/stream/b64/${Buffer.from(fullUrl).toString('base64url')}`,
-    };
-  });
-  res.render('akses/index', { header, data: { url: streams } });
-};
+    try {
+        const header = {pageTitle: 'Dashboard', user: req.session.user}
+        const rawStreams = await aksesModel.getActiveStreams();
+        const streams = rawStreams.map((stream) => {
+            // Contoh: ambil UID dan TOKEN dari URL asli
+            const parts = stream.url.split('/');
+            const uid = parts[parts.length - 2];
+            const token = parts[parts.length - 1];
 
-
-// exports.getHomePage = async (req, res) => {
-//     try {
-//         const header = {pageTitle: 'Dashboard', user: req.session.user}
-//         const rawStreams = await aksesModel.getActiveStreams();
-//         const streams = rawStreams.map((stream) => {
-//             // Contoh: ambil UID dan TOKEN dari URL asli
-//             const parts = stream.url.split('/');
-//             const uid = parts[parts.length - 2];
-//             const token = parts[parts.length - 1];
-
-//             return {
-//                 ...stream,
-//                 uid,
-//                 token,
-//                 proxyUrl: `/stream/${uid}/${token}`,
-//             };
-//         });
-//         const data = {
-//             url: streams
-//         }
-//         res.render('akses/index', {header: header, data: data})
-//     } catch (error) {
-//         console.error(error)
-//         res.status(500).send('Internal server error')
-//     }
-// }
+            return {
+                ...stream,
+                uid,
+                token,
+                proxyUrl: `/stream/${uid}/${token}`,
+            };
+        });
+        const data = {
+            url: streams
+        }
+        res.render('akses/index', {header: header, data: data})
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Internal server error')
+    }
+}
 //====================================================================================================================
 //====================================================================================================================
 //====================================================================================================================
