@@ -1,6 +1,8 @@
 const waitOn = require('wait-on');
 require('dotenv').config();
 
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
 waitOn({
   resources: [`tcp:${process.env.MAINDB_HOST}:${process.env.MAINDB_PORT || 3306}`],
   delay: 4000,         // initial delay in ms
@@ -8,13 +10,29 @@ waitOn({
   timeout: 30000,      // timeout in ms (30s)
   tcpTimeout: 1000,    // TCP timeout per attempt
   window: 1000         // stabilization window
-}, (err) => {
+}, async (err) => {
   if (err) {
     console.error('❌ MySQL did not start in time:', err.message);
     process.exit(1);
   }
-
-  console.log('✅ MySQL is up. Starting server...');
+  console.log('✅ MySQL TCP is up. Verifying SQL readiness...');
+  // === cek benar2 siap query ===
+  const mainDb = require('./models/mainDb');         // ← knex instance
+  const deadline = Date.now() + 60_000;              // 60s
+  while (true) {
+    try {
+      await mainDb.raw('SELECT 1');
+      console.log('✅ MySQL is query-ready.');
+      break;
+    } catch (e) {
+      if (Date.now() > deadline) {
+        console.error('❌ MySQL not ready after 60s:', e.code || e.message);
+        process.exit(1);
+      }
+      console.warn('⏳ DB not ready yet:', e.code || e.message);
+      await sleep(3000);
+    }
+  }
   const express = require('express')
   const session = require('express-session')
   const path = require('path')
@@ -31,12 +49,15 @@ waitOn({
   const SHINOBI_HOST = process.env.SHINOBI_HOST;
   const SHINOBI_GROUP_KEY = process.env.SHINOBI_GROUP_KEY;
 
-  const mainDb = require('./models/mainDb');
   const { startRFIDReader, setEnrollMode, submitEnrollment } = require('./devices/rfid');
   const connectSessionKnex = require('connect-session-knex');
   const KnexSessionStore = connectSessionKnex.ConnectSessionKnexStore;
   
   const app = express()
+  setInterval(() => {
+    mainDb.raw('SELECT 1').catch(e => console.warn('[DB keepalive]', e.code || e.message));
+  }, 30_000);
+
   app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 
   const sessionStore = new KnexSessionStore({
